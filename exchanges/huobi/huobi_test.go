@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/thrasher-/gocryptotrader/config"
+	"github.com/extrame/gocryptotrader/config"
 )
 
 var h HUOBI

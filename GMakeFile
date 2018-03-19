@@ -1,0 +1,9 @@
+env#GOPATH.run.append {
+    $currentDir
+}
+compile(.run) {
+    go install github.com/extrame/gocryptotrader
+}
+run(compile) {
+    gocryptotrader -config config_example.json
+}

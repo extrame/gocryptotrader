@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/thrasher-/gocryptotrader/common"
+	"github.com/extrame/gocryptotrader/common"
 )
 
 const (
@@ -60,7 +60,7 @@ const (
 	yobit         = "..%s..%sexchanges%syobit%s"
 	liqui         = "..%s..%sexchanges%sliqui%s"
 
-	contributorsList = "https://api.github.com/repos/thrasher-/gocryptotrader/contributors"
+	contributorsList = "https://api.github.com/repos/extrame/gocryptotrader/contributors"
 
 	licenseName     = "LICENSE"
 	contributorName = "CONTRIBUTORS"

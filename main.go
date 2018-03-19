@@ -12,12 +12,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/thrasher-/gocryptotrader/common"
-	"github.com/thrasher-/gocryptotrader/config"
-	"github.com/thrasher-/gocryptotrader/currency"
-	"github.com/thrasher-/gocryptotrader/exchanges"
-	"github.com/thrasher-/gocryptotrader/portfolio"
-	"github.com/thrasher-/gocryptotrader/smsglobal"
+	"github.com/extrame/gocryptotrader/common"
+	"github.com/extrame/gocryptotrader/config"
+	"github.com/extrame/gocryptotrader/currency"
+	"github.com/extrame/gocryptotrader/exchanges"
+	"github.com/extrame/gocryptotrader/portfolio"
+	"github.com/extrame/gocryptotrader/smsglobal"
 )
 
 // Bot contains configuration, portfolio, exchange & ticker data and is the

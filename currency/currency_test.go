@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/thrasher-/gocryptotrader/common"
-	"github.com/thrasher-/gocryptotrader/currency/pair"
+	"github.com/extrame/gocryptotrader/common"
+	"github.com/extrame/gocryptotrader/currency/pair"
 )
 
 func TestSetProvider(t *testing.T) {

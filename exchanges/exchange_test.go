@@ -3,10 +3,10 @@ package exchange
 import (
 	"testing"
 
-	"github.com/thrasher-/gocryptotrader/common"
-	"github.com/thrasher-/gocryptotrader/config"
-	"github.com/thrasher-/gocryptotrader/currency/pair"
-	"github.com/thrasher-/gocryptotrader/exchanges/ticker"
+	"github.com/extrame/gocryptotrader/common"
+	"github.com/extrame/gocryptotrader/config"
+	"github.com/extrame/gocryptotrader/currency/pair"
+	"github.com/extrame/gocryptotrader/exchanges/ticker"
 )
 
 func TestSetAssetTypes(t *testing.T) {

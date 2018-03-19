@@ -3,7 +3,7 @@ package lakebtc
 import (
 	"testing"
 
-	"github.com/thrasher-/gocryptotrader/config"
+	"github.com/extrame/gocryptotrader/config"
 )
 
 var l LakeBTC

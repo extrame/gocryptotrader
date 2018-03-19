@@ -3,7 +3,7 @@ package gdax
 import (
 	"testing"
 
-	"github.com/thrasher-/gocryptotrader/config"
+	"github.com/extrame/gocryptotrader/config"
 )
 
 var g GDAX

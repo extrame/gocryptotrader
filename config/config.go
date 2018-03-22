@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/extrame/gocryptotrader/common"
@@ -50,14 +49,22 @@ var (
 	Cfg                                             Config
 )
 
-// WebserverConfig struct holds the prestart variables for the webserver.
-type WebserverConfig struct {
-	Enabled                      bool
-	AdminUsername                string
-	AdminPassword                string
-	ListenAddress                string
-	WebsocketConnectionLimit     int
-	WebsocketAllowInsecureOrigin bool
+// // WebserverConfig struct holds the prestart variables for the webserver.
+// type WebserverConfig struct {
+// 	Enabled                      bool
+// 	AdminUsername                string
+// 	AdminPassword                string
+// 	ListenAddress                string
+// 	WebsocketConnectionLimit     int
+// 	WebsocketAllowInsecureOrigin bool
+// }
+
+// GrpcServerConfig struct holds the prestart variables for the grpc server.
+type GrpcServerConfig struct {
+	Enabled       bool
+	AdminUsername string
+	AdminPassword string
+	ListenAddress string
 }
 
 // SMSGlobalConfig structure holds all the variables you need for instant
@@ -91,10 +98,11 @@ type Config struct {
 	CurrencyExchangeProvider string
 	CurrencyPairFormat       *CurrencyPairFormatConfig `json:"CurrencyPairFormat"`
 	FiatDisplayCurrency      string
-	Portfolio                portfolio.Base   `json:"PortfolioAddresses"`
-	SMS                      SMSGlobalConfig  `json:"SMSGlobal"`
-	Webserver                WebserverConfig  `json:"Webserver"`
-	Exchanges                []ExchangeConfig `json:"Exchanges"`
+	Portfolio                portfolio.Base  `json:"PortfolioAddresses"`
+	SMS                      SMSGlobalConfig `json:"SMSGlobal"`
+	// Webserver                WebserverConfig  `json:"Webserver"`
+	Grpc      GrpcServerConfig `json:"Grpc"`
+	Exchanges []ExchangeConfig `json:"Exchanges"`
 }
 
 // ExchangeConfig holds all the information needed for each enabled Exchange.
@@ -299,28 +307,28 @@ func (c *Config) CheckExchangeConfigValues() error {
 
 // CheckWebserverConfigValues checks information before webserver starts and
 // returns an error if values are incorrect.
-func (c *Config) CheckWebserverConfigValues() error {
-	if c.Webserver.AdminUsername == "" || c.Webserver.AdminPassword == "" {
-		return errors.New(WarningWebserverCredentialValuesEmpty)
-	}
+func (c *Config) CheckGrpcServerConfigValues() error {
+	// if c.Webserver.AdminUsername == "" || c.Webserver.AdminPassword == "" {
+	// 	return errors.New(WarningWebserverCredentialValuesEmpty)
+	// }
 
-	if !common.StringContains(c.Webserver.ListenAddress, ":") {
-		return errors.New(WarningWebserverListenAddressInvalid)
-	}
+	// if !common.StringContains(c.Webserver.ListenAddress, ":") {
+	// 	return errors.New(WarningWebserverListenAddressInvalid)
+	// }
 
-	portStr := common.SplitStrings(c.Webserver.ListenAddress, ":")[1]
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		return errors.New(WarningWebserverListenAddressInvalid)
-	}
+	// portStr := common.SplitStrings(c.Webserver.ListenAddress, ":")[1]
+	// port, err := strconv.Atoi(portStr)
+	// if err != nil {
+	// 	return errors.New(WarningWebserverListenAddressInvalid)
+	// }
 
-	if port < 1 || port > 65355 {
-		return errors.New(WarningWebserverListenAddressInvalid)
-	}
+	// if port < 1 || port > 65355 {
+	// 	return errors.New(WarningWebserverListenAddressInvalid)
+	// }
 
-	if c.Webserver.WebsocketConnectionLimit <= 0 {
-		c.Webserver.WebsocketConnectionLimit = 1
-	}
+	// if c.Webserver.WebsocketConnectionLimit <= 0 {
+	// 	c.Webserver.WebsocketConnectionLimit = 1
+	// }
 
 	return nil
 }
@@ -508,11 +516,11 @@ func (c *Config) LoadConfig(configPath string) error {
 		}
 	}
 
-	if c.Webserver.Enabled {
-		err = c.CheckWebserverConfigValues()
+	if c.Grpc.Enabled {
+		err = c.CheckGrpcServerConfigValues()
 		if err != nil {
 			log.Print(fmt.Errorf(ErrCheckingConfigValues, err))
-			c.Webserver.Enabled = false
+			c.Grpc.Enabled = false
 		}
 	}
 

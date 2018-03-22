@@ -377,21 +377,21 @@ func EncodeURLValues(url string, values url.Values) string {
 	return path
 }
 
-// ExtractHost returns the hostname out of a string
-func ExtractHost(address string) string {
-	host := SplitStrings(address, ":")[0]
-	if host == "" {
-		return "localhost"
-	}
-	return host
-}
+// // ExtractHost returns the hostname out of a string
+// func ExtractHost(address string) string {
+// 	host := SplitStrings(address, ":")[0]
+// 	if host == "" {
+// 		return "localhost"
+// 	}
+// 	return host
+// }
 
-// ExtractPort returns the port name out of a string
-func ExtractPort(host string) int {
-	portStr := SplitStrings(host, ":")[1]
-	port, _ := strconv.Atoi(portStr)
-	return port
-}
+// // ExtractPort returns the port name out of a string
+// func ExtractPort(host string) int {
+// 	portStr := SplitStrings(host, ":")[1]
+// 	port, _ := strconv.Atoi(portStr)
+// 	return port
+// }
 
 // OutputCSV dumps data into a file as comma-separated values
 func OutputCSV(path string, data [][]string) error {

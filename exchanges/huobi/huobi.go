@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	huobiAPIURL     = "https://api.huobi.pro"
+	huobiAPIURL     = "https://api.huobipro.com"
 	huobiAPIVersion = "1"
 
 	huobiMarketHistoryKline   = "market/history/kline"

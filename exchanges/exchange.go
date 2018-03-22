@@ -380,3 +380,10 @@ func (e *Base) UpdateAvailableCurrencies(exchangeProducts []string, force bool) 
 	}
 	return nil
 }
+
+// EnabledExchangeCurrencies is a sub type for singular exchanges and respective
+// currencies
+type EnabledExchangeCurrencies struct {
+	ExchangeName   string         `json:"exchangeName"`
+	ExchangeValues []ticker.Price `json:"exchangeValues"`
+}

@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package grpc;
+
+service GoCryptoTraderService {
+    rpc GetTickers(google.protobuf.Empty) returns (EnabledExchangeCurrencies){}
+ }
+
+ message CurrencyPair {
+     string Delimiter = 1;
+     string FirstCurrency =2;
+     string SecondCurrency = 3;
+ }
+
+ message Value {
+    CurrencyPair Pair = 1;
+    string CurrencyPair = 2;
+    double Last = 3;
+    double High = 4;
+    double Low = 5;
+    double Bid = 6;
+    double Ask = 7;
+    double Volume = 8;
+    double PriceATH = 9;
+ }
+
+ message ExchangeCurrencies {
+    string ExchangeName = 1;
+    repeated Value ExchangeValues = 2;
+ }
+
+ message EnabledExchangeCurrencies {
+    repeated ExchangeCurrencies ExchangeCurrencies= 1;
+ }

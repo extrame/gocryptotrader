@@ -2,13 +2,16 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/gorilla/websocket"
 	"github.com/extrame/gocryptotrader/common"
 	"github.com/extrame/gocryptotrader/config"
+	"github.com/extrame/gocryptotrader/exchanges"
+	"github.com/extrame/unmarshall"
+	"github.com/gorilla/websocket"
 )
 
 // Vars for the websocket client
@@ -35,6 +38,16 @@ type WebsocketEventResponse struct {
 	Event string      `json:"event"`
 	Data  interface{} `json:"data"`
 	Error string      `json:"error"`
+}
+
+func (w WebsocketEventResponse) UnmarshalData(value interface{}) error {
+	var u = unmarshall.Unmarshaller{
+		ValueGetter: func(tag string) []string {
+			return []string{"1", "2'"}
+		},
+		AutoFill: true,
+	}
+	return u.Unmarshall(value)
 }
 
 // WebsocketOrderbookTickerRequest is a struct used for ticker and orderbook
@@ -73,10 +86,19 @@ func SendWebsocketEvent(event string, reqData interface{}, result *WebsocketEven
 }
 
 func main() {
+	var configFile string
+
+	flag.StringVar(&configFile, "config", "", "config file path, if not specified, will use config.json as default")
+	flag.Parse()
+
+	if configFile == "" {
+		configFile = config.ConfigFile
+	}
+
 	cfg := config.GetConfig()
-	err := cfg.LoadConfig(config.ConfigFile)
+	err := cfg.LoadConfig(configFile)
 	if err != nil {
-		log.Fatalf("Failed to load config file: %s", err)
+		log.Fatalf("Failed to load config file(%s): %s", configFile, err)
 	}
 
 	listenAddr := cfg.Webserver.ListenAddress
@@ -93,25 +115,27 @@ func main() {
 	log.Println("Connected to websocket!")
 
 	log.Println("Authenticating..")
-	var wsResp WebsocketEventResponse
+	var wsResp *WebsocketEventResponse
 	reqData := WebsocketAuth{
 		Username: cfg.Webserver.AdminUsername,
 		Password: common.HexEncodeToString(common.GetSHA256([]byte(cfg.Webserver.AdminPassword))),
 	}
-	err = SendWebsocketEvent("auth", reqData, &wsResp)
+	wsResp = new(WebsocketEventResponse)
+	err = SendWebsocketEvent("auth", reqData, wsResp)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Authenticated successfully")
 
 	log.Println("Getting config..")
-	err = SendWebsocketEvent("GetConfig", nil, &wsResp)
+	wsResp = new(WebsocketEventResponse)
+	err = SendWebsocketEvent("GetConfig", nil, wsResp)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Fetched config.")
+	log.Printf("Fetched config.", wsResp.Data)
 
-	dataJSON, err := common.JSONEncode(&wsResp.Data)
+	dataJSON, err := common.JSONEncode(wsResp.Data)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -122,70 +146,86 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println("Saving config..")
-	origBotName := resultCfg.Name
-	resultCfg.Name = "TEST"
-	err = SendWebsocketEvent("SaveConfig", resultCfg, &wsResp)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Saved config!")
-	resultCfg.Name = origBotName
-	err = SendWebsocketEvent("SaveConfig", resultCfg, &wsResp)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Saved config (restored original bot name)!")
+	// log.Println("Saving config..")
+	// origBotName := resultCfg.Name
+	// resultCfg.Name = "TEST"
+	// err = SendWebsocketEvent("SaveConfig", resultCfg, &wsResp)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// log.Println("Saved config!")
+	// resultCfg.Name = origBotName
+	// err = SendWebsocketEvent("SaveConfig", resultCfg, &wsResp)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// log.Println("Saved config (restored original bot name)!")
 
 	log.Println("Getting account info..")
-	err = SendWebsocketEvent("GetAccountInfo", nil, &wsResp)
+	wsResp = new(WebsocketEventResponse)
+	err = SendWebsocketEvent("GetAccountInfo", nil, wsResp)
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println("Got account info!", wsResp.Data)
+
+	log.Println("Getting getexchangerates..")
+	wsResp = new(WebsocketEventResponse)
+	err = SendWebsocketEvent("GetExchangeRates", nil, wsResp)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Got account info!")
+	log.Println("GetExchangeRates!", wsResp)
 
 	log.Println("Getting tickers..")
-	err = SendWebsocketEvent("GetTickers", nil, &wsResp)
+	wsResp = new(WebsocketEventResponse)
+	err = SendWebsocketEvent("GetTickers", nil, wsResp)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Got tickers!")
 
-	log.Println("Getting specific ticker..")
-	dataReq := WebsocketOrderbookTickerRequest{
-		Exchange:  "Bitfinex",
-		Currency:  "BTCUSD",
-		AssetType: "SPOT",
-	}
+	var resp []exchange.EnabledExchangeCurrencies
 
-	err = SendWebsocketEvent("GetTicker", dataReq, &wsResp)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Got ticker!")
+	wsResp.UnmarshalData(&resp)
 
-	log.Println("Getting orderbooks..")
-	err = SendWebsocketEvent("GetOrderbooks", nil, &wsResp)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Got orderbooks!")
+	log.Println(resp)
 
-	log.Println("Getting specific orderbook..")
-	err = SendWebsocketEvent("GetOrderbook", dataReq, &wsResp)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Got orderbook!")
+	// log.Println("Getting specific ticker..")
+	// dataReq := WebsocketOrderbookTickerRequest{
+	// 	Exchange:  "Bitfinex",
+	// 	Currency:  "BTCUSD",
+	// 	AssetType: "SPOT",
+	// }
 
-	for {
-		var wsEvent WebsocketEventResponse
-		err = WSConn.ReadJSON(&wsEvent)
-		if err != nil {
-			break
-		}
+	// err = SendWebsocketEvent("GetTicker", dataReq, &wsResp)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// log.Println("Got ticker!", wsResp.Data)
 
-		log.Printf("Recv'd: %s", wsEvent.Event)
-	}
+	// log.Println("Getting orderbooks..")
+	// err = SendWebsocketEvent("GetOrderbooks", nil, &wsResp)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// log.Println("Got orderbooks!")
+
+	// log.Println("Getting specific orderbook..")
+	// err = SendWebsocketEvent("GetOrderbook", dataReq, &wsResp)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// log.Println("Got orderbook!")
+
+	// for {
+	// 	var wsEvent WebsocketEventResponse
+	// 	err = WSConn.ReadJSON(&wsEvent)
+	// 	if err != nil {
+	// 		break
+	// 	}
+
+	// 	log.Printf("Recv'd: %s", wsEvent.Event)
+	// }
 	WSConn.Close()
 }

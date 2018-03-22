@@ -5,11 +5,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/extrame/gocryptotrader/config"
 	exchange "github.com/extrame/gocryptotrader/exchanges"
 	"github.com/extrame/gocryptotrader/exchanges/orderbook"
 	"github.com/extrame/gocryptotrader/exchanges/ticker"
+	"github.com/gorilla/mux"
 )
 
 // AllEnabledExchangeOrderbooks holds the enabled exchange orderbooks
@@ -26,14 +26,7 @@ type EnabledExchangeOrderbooks struct {
 
 // AllEnabledExchangeCurrencies holds the enabled exchange currencies
 type AllEnabledExchangeCurrencies struct {
-	Data []EnabledExchangeCurrencies `json:"data"`
-}
-
-// EnabledExchangeCurrencies is a sub type for singular exchanges and respective
-// currencies
-type EnabledExchangeCurrencies struct {
-	ExchangeName   string         `json:"exchangeName"`
-	ExchangeValues []ticker.Price `json:"exchangeValues"`
+	Data grpc `json:"data"`
 }
 
 // AllEnabledExchangeAccounts holds all enabled accounts info
@@ -204,12 +197,12 @@ func RESTGetTicker(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllActiveTickers returns all enabled exchange tickers
-func GetAllActiveTickers() []EnabledExchangeCurrencies {
-	var tickerData []EnabledExchangeCurrencies
+func GetAllActiveTickers() grpc {
+	var tickerData grpc
 
 	for _, individualBot := range bot.exchanges {
 		if individualBot != nil && individualBot.IsEnabled() {
-			var individualExchange EnabledExchangeCurrencies
+			var individualExchange exchange.EnabledExchangeCurrencies
 			exchangeName := individualBot.GetName()
 			individualExchange.ExchangeName = exchangeName
 			currencies := individualBot.GetEnabledCurrencies()

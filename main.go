@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
+	"net"
 	"os"
 	"os/signal"
 	"runtime"
@@ -125,18 +125,18 @@ func main() {
 	go portfolio.StartPortfolioWatcher()
 
 	log.Println("Starting websocket handler")
-	go WebsocketHandler()
+	// go WebsocketHandler()
 	go TickerUpdaterRoutine()
 	go OrderbookUpdaterRoutine()
 
-	if bot.config.Webserver.Enabled {
-		listenAddr := bot.config.Webserver.ListenAddress
+	if bot.config.Grpc.Enabled {
+		host, port, _ := net.SplitHostPort(bot.config.Grpc.ListenAddress)
 		log.Printf(
-			"HTTP Webserver support enabled. Listen URL: http://%s:%d/\n",
-			common.ExtractHost(listenAddr), common.ExtractPort(listenAddr),
+			"Grpc Server support enabled. Listen URL: http://%s:%s/\n",
+			host, port,
 		)
-		router := NewRouter(bot.exchanges)
-		log.Fatal(http.ListenAndServe(listenAddr, router))
+		// router := NewRouter(bot.exchanges)
+		go StartGrpcServer(bot.config.Grpc.ListenAddress)
 	} else {
 		log.Println("HTTP RESTful Webserver support disabled.")
 	}

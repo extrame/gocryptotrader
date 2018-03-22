@@ -160,17 +160,18 @@ func printOrderbookSummary(result orderbook.Base, p pair.CurrencyPair, assetType
 }
 
 func relayWebsocketEvent(result interface{}, event, assetType, exchangeName string) {
-	evt := WebsocketEvent{
-		Data:      result,
-		Event:     event,
-		AssetType: assetType,
-		Exchange:  exchangeName,
-	}
-	err := BroadcastWebsocketMessage(evt)
-	if err != nil {
-		log.Println(fmt.Errorf("Failed to broadcast websocket event. Error: %s",
-			err))
-	}
+	// evt := WebsocketEvent{
+	// 	Data:      result,
+	// 	Event:     event,
+	// 	AssetType: assetType,
+	// 	Exchange:  exchangeName,
+	// }
+	// err := BroadcastWebsocketMessage(evt)
+	// if err != nil {
+	// 	log.Println(fmt.Errorf("Failed to broadcast websocket event. Error: %s",
+	// 		err))
+	// }
+	fmt.Println("TODO grpc stream")
 }
 
 // TickerUpdaterRoutine fetches and updates the ticker for all enabled

@@ -56,22 +56,22 @@ func (g *Gemini) GetExchangeAccountInfo() (exchange.AccountInfo, error) {
 // UpdateTicker updates and returns the ticker for a currency pair
 func (g *Gemini) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
 	var tickerPrice ticker.Price
-	tick, err := g.GetTicker(p.Pair().String())
+	tick, err := g.GetTicker(p.Pair())
 	if err != nil {
 		return tickerPrice, err
 	}
-	tickerPrice.Pair = p
+	tickerPrice.Pair = &p
 	tickerPrice.Ask = tick.Ask
 	tickerPrice.Bid = tick.Bid
 	tickerPrice.Last = tick.Last
 	tickerPrice.Volume = tick.Volume.USD
-	ticker.ProcessTicker(g.GetName(), p, tickerPrice, assetType)
-	return ticker.GetTicker(g.Name, p, assetType)
+	ticker.ProcessTicker(g.GetName(), &p, tickerPrice, assetType)
+	return ticker.GetTicker(g.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (g *Gemini) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tickerNew, err := ticker.GetTicker(g.GetName(), p, assetType)
+	tickerNew, err := ticker.GetTicker(g.GetName(), &p, assetType)
 	if err != nil {
 		return g.UpdateTicker(p, assetType)
 	}
@@ -90,7 +90,7 @@ func (g *Gemini) GetOrderbookEx(p pair.CurrencyPair, assetType string) (orderboo
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (g *Gemini) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	orderbookNew, err := g.GetOrderbook(p.Pair().String(), url.Values{})
+	orderbookNew, err := g.GetOrderbook(p.Pair(), url.Values{})
 	if err != nil {
 		return orderBook, err
 	}

@@ -8,10 +8,9 @@ It is generated from these files:
 	grpc/cryptotrader.proto
 
 It has these top-level messages:
-	CurrencyPair
-	Value
-	ExchangeCurrencies
 	EnabledExchangeCurrencies
+	AllEnabledExchangeCurrencies
+	SpecificTicker
 */
 package grpc
 
@@ -19,6 +18,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import google_protobuf "github.com/golang/protobuf/ptypes/empty"
+import ticker "github.com/extrame/gocryptotrader/exchanges/ticker"
 
 import (
 	context "golang.org/x/net/context"
@@ -36,163 +36,82 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type CurrencyPair struct {
-	Delimiter      string `protobuf:"bytes,1,opt,name=Delimiter" json:"Delimiter,omitempty"`
-	FirstCurrency  string `protobuf:"bytes,2,opt,name=FirstCurrency" json:"FirstCurrency,omitempty"`
-	SecondCurrency string `protobuf:"bytes,3,opt,name=SecondCurrency" json:"SecondCurrency,omitempty"`
+type EnabledExchangeCurrencies struct {
+	ExchangeName   string          `protobuf:"bytes,1,opt,name=ExchangeName" json:"ExchangeName,omitempty"`
+	ExchangeValues []*ticker.Price `protobuf:"bytes,2,rep,name=ExchangeValues" json:"ExchangeValues,omitempty"`
 }
 
-func (m *CurrencyPair) Reset()                    { *m = CurrencyPair{} }
-func (m *CurrencyPair) String() string            { return proto.CompactTextString(m) }
-func (*CurrencyPair) ProtoMessage()               {}
-func (*CurrencyPair) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (m *EnabledExchangeCurrencies) Reset()                    { *m = EnabledExchangeCurrencies{} }
+func (m *EnabledExchangeCurrencies) String() string            { return proto.CompactTextString(m) }
+func (*EnabledExchangeCurrencies) ProtoMessage()               {}
+func (*EnabledExchangeCurrencies) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-func (m *CurrencyPair) GetDelimiter() string {
-	if m != nil {
-		return m.Delimiter
-	}
-	return ""
-}
-
-func (m *CurrencyPair) GetFirstCurrency() string {
-	if m != nil {
-		return m.FirstCurrency
-	}
-	return ""
-}
-
-func (m *CurrencyPair) GetSecondCurrency() string {
-	if m != nil {
-		return m.SecondCurrency
-	}
-	return ""
-}
-
-type Value struct {
-	Pair         *CurrencyPair `protobuf:"bytes,1,opt,name=Pair" json:"Pair,omitempty"`
-	CurrencyPair string        `protobuf:"bytes,2,opt,name=CurrencyPair" json:"CurrencyPair,omitempty"`
-	Last         float64       `protobuf:"fixed64,3,opt,name=Last" json:"Last,omitempty"`
-	High         float64       `protobuf:"fixed64,4,opt,name=High" json:"High,omitempty"`
-	Low          float64       `protobuf:"fixed64,5,opt,name=Low" json:"Low,omitempty"`
-	Bid          float64       `protobuf:"fixed64,6,opt,name=Bid" json:"Bid,omitempty"`
-	Ask          float64       `protobuf:"fixed64,7,opt,name=Ask" json:"Ask,omitempty"`
-	Volume       float64       `protobuf:"fixed64,8,opt,name=Volume" json:"Volume,omitempty"`
-	PriceATH     float64       `protobuf:"fixed64,9,opt,name=PriceATH" json:"PriceATH,omitempty"`
-}
-
-func (m *Value) Reset()                    { *m = Value{} }
-func (m *Value) String() string            { return proto.CompactTextString(m) }
-func (*Value) ProtoMessage()               {}
-func (*Value) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
-
-func (m *Value) GetPair() *CurrencyPair {
-	if m != nil {
-		return m.Pair
-	}
-	return nil
-}
-
-func (m *Value) GetCurrencyPair() string {
-	if m != nil {
-		return m.CurrencyPair
-	}
-	return ""
-}
-
-func (m *Value) GetLast() float64 {
-	if m != nil {
-		return m.Last
-	}
-	return 0
-}
-
-func (m *Value) GetHigh() float64 {
-	if m != nil {
-		return m.High
-	}
-	return 0
-}
-
-func (m *Value) GetLow() float64 {
-	if m != nil {
-		return m.Low
-	}
-	return 0
-}
-
-func (m *Value) GetBid() float64 {
-	if m != nil {
-		return m.Bid
-	}
-	return 0
-}
-
-func (m *Value) GetAsk() float64 {
-	if m != nil {
-		return m.Ask
-	}
-	return 0
-}
-
-func (m *Value) GetVolume() float64 {
-	if m != nil {
-		return m.Volume
-	}
-	return 0
-}
-
-func (m *Value) GetPriceATH() float64 {
-	if m != nil {
-		return m.PriceATH
-	}
-	return 0
-}
-
-type ExchangeCurrencies struct {
-	ExchangeName   string   `protobuf:"bytes,1,opt,name=ExchangeName" json:"ExchangeName,omitempty"`
-	ExchangeValues []*Value `protobuf:"bytes,2,rep,name=ExchangeValues" json:"ExchangeValues,omitempty"`
-}
-
-func (m *ExchangeCurrencies) Reset()                    { *m = ExchangeCurrencies{} }
-func (m *ExchangeCurrencies) String() string            { return proto.CompactTextString(m) }
-func (*ExchangeCurrencies) ProtoMessage()               {}
-func (*ExchangeCurrencies) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
-
-func (m *ExchangeCurrencies) GetExchangeName() string {
+func (m *EnabledExchangeCurrencies) GetExchangeName() string {
 	if m != nil {
 		return m.ExchangeName
 	}
 	return ""
 }
 
-func (m *ExchangeCurrencies) GetExchangeValues() []*Value {
+func (m *EnabledExchangeCurrencies) GetExchangeValues() []*ticker.Price {
 	if m != nil {
 		return m.ExchangeValues
 	}
 	return nil
 }
 
-type EnabledExchangeCurrencies struct {
-	ExchangeCurrencies []*ExchangeCurrencies `protobuf:"bytes,1,rep,name=ExchangeCurrencies" json:"ExchangeCurrencies,omitempty"`
+type AllEnabledExchangeCurrencies struct {
+	ExchangeCurrencies []*EnabledExchangeCurrencies `protobuf:"bytes,1,rep,name=ExchangeCurrencies" json:"ExchangeCurrencies,omitempty"`
 }
 
-func (m *EnabledExchangeCurrencies) Reset()                    { *m = EnabledExchangeCurrencies{} }
-func (m *EnabledExchangeCurrencies) String() string            { return proto.CompactTextString(m) }
-func (*EnabledExchangeCurrencies) ProtoMessage()               {}
-func (*EnabledExchangeCurrencies) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+func (m *AllEnabledExchangeCurrencies) Reset()                    { *m = AllEnabledExchangeCurrencies{} }
+func (m *AllEnabledExchangeCurrencies) String() string            { return proto.CompactTextString(m) }
+func (*AllEnabledExchangeCurrencies) ProtoMessage()               {}
+func (*AllEnabledExchangeCurrencies) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
-func (m *EnabledExchangeCurrencies) GetExchangeCurrencies() []*ExchangeCurrencies {
+func (m *AllEnabledExchangeCurrencies) GetExchangeCurrencies() []*EnabledExchangeCurrencies {
 	if m != nil {
 		return m.ExchangeCurrencies
 	}
 	return nil
 }
 
+type SpecificTicker struct {
+	Currency     string `protobuf:"bytes,1,opt,name=Currency" json:"Currency,omitempty"`
+	ExchangeName string `protobuf:"bytes,2,opt,name=ExchangeName" json:"ExchangeName,omitempty"`
+	AssetType    string `protobuf:"bytes,3,opt,name=AssetType" json:"AssetType,omitempty"`
+}
+
+func (m *SpecificTicker) Reset()                    { *m = SpecificTicker{} }
+func (m *SpecificTicker) String() string            { return proto.CompactTextString(m) }
+func (*SpecificTicker) ProtoMessage()               {}
+func (*SpecificTicker) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
+func (m *SpecificTicker) GetCurrency() string {
+	if m != nil {
+		return m.Currency
+	}
+	return ""
+}
+
+func (m *SpecificTicker) GetExchangeName() string {
+	if m != nil {
+		return m.ExchangeName
+	}
+	return ""
+}
+
+func (m *SpecificTicker) GetAssetType() string {
+	if m != nil {
+		return m.AssetType
+	}
+	return ""
+}
+
 func init() {
-	proto.RegisterType((*CurrencyPair)(nil), "grpc.CurrencyPair")
-	proto.RegisterType((*Value)(nil), "grpc.Value")
-	proto.RegisterType((*ExchangeCurrencies)(nil), "grpc.ExchangeCurrencies")
 	proto.RegisterType((*EnabledExchangeCurrencies)(nil), "grpc.EnabledExchangeCurrencies")
+	proto.RegisterType((*AllEnabledExchangeCurrencies)(nil), "grpc.AllEnabledExchangeCurrencies")
+	proto.RegisterType((*SpecificTicker)(nil), "grpc.SpecificTicker")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -206,7 +125,8 @@ const _ = grpc1.SupportPackageIsVersion4
 // Client API for GoCryptoTraderService service
 
 type GoCryptoTraderServiceClient interface {
-	GetTickers(ctx context.Context, in *google_protobuf.Empty, opts ...grpc1.CallOption) (*EnabledExchangeCurrencies, error)
+	GetTickers(ctx context.Context, in *google_protobuf.Empty, opts ...grpc1.CallOption) (*AllEnabledExchangeCurrencies, error)
+	GetTicker(ctx context.Context, in *SpecificTicker, opts ...grpc1.CallOption) (*ticker.Price, error)
 }
 
 type goCryptoTraderServiceClient struct {
@@ -217,9 +137,18 @@ func NewGoCryptoTraderServiceClient(cc *grpc1.ClientConn) GoCryptoTraderServiceC
 	return &goCryptoTraderServiceClient{cc}
 }
 
-func (c *goCryptoTraderServiceClient) GetTickers(ctx context.Context, in *google_protobuf.Empty, opts ...grpc1.CallOption) (*EnabledExchangeCurrencies, error) {
-	out := new(EnabledExchangeCurrencies)
+func (c *goCryptoTraderServiceClient) GetTickers(ctx context.Context, in *google_protobuf.Empty, opts ...grpc1.CallOption) (*AllEnabledExchangeCurrencies, error) {
+	out := new(AllEnabledExchangeCurrencies)
 	err := grpc1.Invoke(ctx, "/grpc.GoCryptoTraderService/GetTickers", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *goCryptoTraderServiceClient) GetTicker(ctx context.Context, in *SpecificTicker, opts ...grpc1.CallOption) (*ticker.Price, error) {
+	out := new(ticker.Price)
+	err := grpc1.Invoke(ctx, "/grpc.GoCryptoTraderService/GetTicker", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +158,8 @@ func (c *goCryptoTraderServiceClient) GetTickers(ctx context.Context, in *google
 // Server API for GoCryptoTraderService service
 
 type GoCryptoTraderServiceServer interface {
-	GetTickers(context.Context, *google_protobuf.Empty) (*EnabledExchangeCurrencies, error)
+	GetTickers(context.Context, *google_protobuf.Empty) (*AllEnabledExchangeCurrencies, error)
+	GetTicker(context.Context, *SpecificTicker) (*ticker.Price, error)
 }
 
 func RegisterGoCryptoTraderServiceServer(s *grpc1.Server, srv GoCryptoTraderServiceServer) {
@@ -254,6 +184,24 @@ func _GoCryptoTraderService_GetTickers_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GoCryptoTraderService_GetTicker_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc1.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SpecificTicker)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GoCryptoTraderServiceServer).GetTicker(ctx, in)
+	}
+	info := &grpc1.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/grpc.GoCryptoTraderService/GetTicker",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GoCryptoTraderServiceServer).GetTicker(ctx, req.(*SpecificTicker))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _GoCryptoTraderService_serviceDesc = grpc1.ServiceDesc{
 	ServiceName: "grpc.GoCryptoTraderService",
 	HandlerType: (*GoCryptoTraderServiceServer)(nil),
@@ -261,6 +209,10 @@ var _GoCryptoTraderService_serviceDesc = grpc1.ServiceDesc{
 		{
 			MethodName: "GetTickers",
 			Handler:    _GoCryptoTraderService_GetTickers_Handler,
+		},
+		{
+			MethodName: "GetTicker",
+			Handler:    _GoCryptoTraderService_GetTicker_Handler,
 		},
 	},
 	Streams:  []grpc1.StreamDesc{},
@@ -270,30 +222,26 @@ var _GoCryptoTraderService_serviceDesc = grpc1.ServiceDesc{
 func init() { proto.RegisterFile("grpc/cryptotrader.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 396 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x92, 0x51, 0x8f, 0xd2, 0x40,
-	0x10, 0xc7, 0xed, 0xd1, 0xc3, 0x63, 0xd0, 0x8b, 0xd9, 0xc4, 0x73, 0x45, 0x13, 0x2f, 0x8d, 0xb9,
-	0xdc, 0x53, 0x49, 0xb8, 0x4f, 0xc0, 0x21, 0xc2, 0x03, 0x31, 0xa4, 0x10, 0x9e, 0x2d, 0xdb, 0xb1,
-	0x6c, 0x68, 0xbb, 0xcd, 0x76, 0xab, 0xe2, 0xf7, 0xf5, 0x7b, 0x98, 0x9d, 0xb6, 0x68, 0x91, 0x7b,
-	0x9b, 0xf9, 0xcd, 0xcc, 0xfe, 0xff, 0x3b, 0x19, 0x78, 0x13, 0xeb, 0x5c, 0x0c, 0x85, 0x3e, 0xe4,
-	0x46, 0x19, 0x1d, 0x46, 0xa8, 0xfd, 0x5c, 0x2b, 0xa3, 0x98, 0x6b, 0x0b, 0x83, 0x77, 0xb1, 0x52,
-	0x71, 0x82, 0x43, 0x62, 0xdb, 0xf2, 0xdb, 0x10, 0xd3, 0xdc, 0x1c, 0xaa, 0x16, 0xef, 0x17, 0xbc,
-	0x98, 0x94, 0x5a, 0x63, 0x26, 0x0e, 0xcb, 0x50, 0x6a, 0xf6, 0x1e, 0x7a, 0x9f, 0x30, 0x91, 0xa9,
-	0x34, 0xa8, 0xb9, 0x73, 0xeb, 0xdc, 0xf7, 0x82, 0xbf, 0x80, 0x7d, 0x84, 0x97, 0x9f, 0xa5, 0x2e,
-	0x4c, 0x33, 0xc2, 0x2f, 0xa8, 0xa3, 0x0d, 0xd9, 0x1d, 0x5c, 0xaf, 0x50, 0xa8, 0x2c, 0x3a, 0xb6,
-	0x75, 0xa8, 0xed, 0x84, 0x7a, 0xbf, 0x1d, 0xb8, 0xdc, 0x84, 0x49, 0x89, 0xec, 0x0e, 0x5c, 0xab,
-	0x4e, 0x82, 0xfd, 0x11, 0xf3, 0xad, 0x6f, 0xff, 0x5f, 0x5f, 0x01, 0xd5, 0x99, 0xd7, 0x76, 0x5b,
-	0xcb, 0xb7, 0x7f, 0xc0, 0xc0, 0x5d, 0x84, 0x85, 0x21, 0x4d, 0x27, 0xa0, 0xd8, 0xb2, 0xb9, 0x8c,
-	0x77, 0xdc, 0xad, 0x98, 0x8d, 0xd9, 0x2b, 0xe8, 0x2c, 0xd4, 0x0f, 0x7e, 0x49, 0xc8, 0x86, 0x96,
-	0x3c, 0xca, 0x88, 0x77, 0x2b, 0xf2, 0x28, 0x23, 0x4b, 0xc6, 0xc5, 0x9e, 0x3f, 0xaf, 0xc8, 0xb8,
-	0xd8, 0xb3, 0x1b, 0xe8, 0x6e, 0x54, 0x52, 0xa6, 0xc8, 0xaf, 0x08, 0xd6, 0x19, 0x1b, 0xc0, 0xd5,
-	0x52, 0x4b, 0x81, 0xe3, 0xf5, 0x9c, 0xf7, 0xa8, 0x72, 0xcc, 0xbd, 0x14, 0xd8, 0xf4, 0xa7, 0xd8,
-	0x85, 0x59, 0x8c, 0xb5, 0x53, 0x89, 0x85, 0xfd, 0x4b, 0x43, 0xbf, 0x84, 0x29, 0xd6, 0xcb, 0x6e,
-	0x31, 0xf6, 0x00, 0xd7, 0x4d, 0x4e, 0x8b, 0x2a, 0xf8, 0xc5, 0x6d, 0xe7, 0xbe, 0x3f, 0xea, 0x57,
-	0x1b, 0x22, 0x16, 0x9c, 0xb4, 0x78, 0x08, 0x6f, 0xa7, 0x59, 0xb8, 0x4d, 0x30, 0x3a, 0xa3, 0x3a,
-	0x3f, 0xe7, 0x85, 0x3b, 0xf4, 0x2a, 0xaf, 0x5e, 0xfd, 0xbf, 0x1e, 0x9c, 0x99, 0x19, 0x7d, 0x85,
-	0xd7, 0x33, 0x35, 0xa1, 0xa3, 0x5b, 0xd3, 0xd1, 0xad, 0x50, 0x7f, 0x97, 0x02, 0xd9, 0x0c, 0x60,
-	0x86, 0x66, 0x2d, 0xc5, 0x1e, 0x75, 0xc1, 0x6e, 0xfc, 0xea, 0xfc, 0xfc, 0xe6, 0xfc, 0xfc, 0xa9,
-	0x3d, 0xbf, 0xc1, 0x87, 0x5a, 0xec, 0x29, 0xa7, 0xde, 0xb3, 0x6d, 0x97, 0x46, 0x1e, 0xfe, 0x04,
-	0x00, 0x00, 0xff, 0xff, 0x02, 0x95, 0x7c, 0xb5, 0xe0, 0x02, 0x00, 0x00,
+	// 332 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x51, 0xcf, 0x4f, 0xc2, 0x30,
+	0x18, 0x65, 0x60, 0x8c, 0x54, 0xe5, 0xd0, 0xf8, 0x63, 0x4e, 0x12, 0x49, 0x4f, 0x9c, 0xda, 0x04,
+	0xe3, 0xd5, 0x84, 0x10, 0x42, 0xe2, 0x41, 0x0d, 0x10, 0xef, 0x5b, 0xf9, 0x18, 0x8d, 0xdb, 0xda,
+	0x74, 0x1d, 0x61, 0x7f, 0x89, 0xff, 0xae, 0x59, 0x0b, 0x28, 0x02, 0x1e, 0xfb, 0xfa, 0xde, 0xf7,
+	0xbe, 0xf7, 0x3d, 0x74, 0x1b, 0x6b, 0xc5, 0x19, 0xd7, 0xa5, 0x32, 0xd2, 0xe8, 0x70, 0x06, 0x9a,
+	0x2a, 0x2d, 0x8d, 0xc4, 0x27, 0xd5, 0x47, 0x70, 0x1f, 0x4b, 0x19, 0x27, 0xc0, 0x2c, 0x16, 0x15,
+	0x73, 0x06, 0xa9, 0x32, 0xa5, 0xa3, 0x04, 0xcf, 0xb1, 0x30, 0x8b, 0x22, 0xa2, 0x5c, 0xa6, 0x0c,
+	0x56, 0x46, 0x87, 0x29, 0xb0, 0x58, 0xfe, 0x9e, 0xc5, 0x60, 0xc5, 0x17, 0x61, 0x16, 0x43, 0xce,
+	0x8c, 0xe0, 0x9f, 0xa0, 0x99, 0xd2, 0x82, 0x83, 0xd3, 0x93, 0x25, 0xba, 0x1b, 0x66, 0x61, 0x94,
+	0xc0, 0x6c, 0xb8, 0xa6, 0x0d, 0x0a, 0xad, 0x21, 0xe3, 0x02, 0x72, 0x4c, 0xd0, 0xc5, 0x06, 0x7d,
+	0x0d, 0x53, 0xf0, 0xbd, 0x8e, 0xd7, 0x6d, 0x8e, 0x77, 0x30, 0xfc, 0x84, 0x5a, 0x9b, 0xf7, 0x47,
+	0x98, 0x14, 0x90, 0xfb, 0xf5, 0x4e, 0xa3, 0x7b, 0xde, 0xbb, 0xa4, 0xce, 0x8d, 0xbe, 0x57, 0x6e,
+	0xe3, 0x3f, 0x24, 0x22, 0x51, 0xbb, 0x9f, 0x24, 0xc7, 0xad, 0xdf, 0x10, 0xde, 0x47, 0x7d, 0xcf,
+	0x8e, 0x7e, 0xa0, 0xd5, 0x5d, 0xe8, 0x51, 0xf1, 0xf8, 0x80, 0x94, 0x64, 0xa8, 0x35, 0x51, 0xc0,
+	0xc5, 0x5c, 0xf0, 0xa9, 0x5d, 0x0c, 0x07, 0xe8, 0x6c, 0xfd, 0x5f, 0xae, 0x93, 0x6d, 0xdf, 0x7b,
+	0xc9, 0xeb, 0x07, 0x92, 0xb7, 0x51, 0xb3, 0x9f, 0xe7, 0x60, 0xa6, 0xa5, 0x02, 0xbf, 0x61, 0x09,
+	0x3f, 0x40, 0xef, 0xcb, 0x43, 0xd7, 0x23, 0x39, 0xb0, 0x45, 0x4c, 0x6d, 0x11, 0x13, 0xd0, 0x4b,
+	0xc1, 0x01, 0xbf, 0x20, 0x34, 0x02, 0xe3, 0x96, 0xc8, 0xf1, 0x0d, 0x75, 0xf5, 0xd2, 0x4d, 0xbd,
+	0x74, 0x58, 0xd5, 0x1b, 0x10, 0x17, 0xf2, 0xbf, 0x23, 0x91, 0x1a, 0xee, 0xa1, 0xe6, 0x76, 0x16,
+	0xbe, 0x72, 0x92, 0xdd, 0x98, 0xc1, 0x6e, 0x11, 0xa4, 0x16, 0x9d, 0x5a, 0xa7, 0xc7, 0xef, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0x8a, 0x8d, 0xd0, 0xad, 0x77, 0x02, 0x00, 0x00,
 }

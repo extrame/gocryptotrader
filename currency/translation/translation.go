@@ -2,11 +2,9 @@ package translation
 
 import (
 	"errors"
-
-	"github.com/extrame/gocryptotrader/currency/pair"
 )
 
-var translations = map[pair.CurrencyItem]pair.CurrencyItem{
+var translations = map[string]string{
 	"BTC":  "XBT",
 	"ETH":  "XETH",
 	"DOGE": "XDG",
@@ -14,7 +12,7 @@ var translations = map[pair.CurrencyItem]pair.CurrencyItem{
 }
 
 // GetTranslation returns similar strings for a particular currency
-func GetTranslation(currency pair.CurrencyItem) (pair.CurrencyItem, error) {
+func GetTranslation(currency string) (string, error) {
 	result, ok := translations[currency]
 	if !ok {
 		return "", errors.New("no translation found for specified currency")
@@ -24,7 +22,7 @@ func GetTranslation(currency pair.CurrencyItem) (pair.CurrencyItem, error) {
 }
 
 // HasTranslation returns whether or not a particular currency has a translation
-func HasTranslation(currency pair.CurrencyItem) bool {
+func HasTranslation(currency string) bool {
 	_, ok := translations[currency]
 	if !ok {
 		return false

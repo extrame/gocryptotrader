@@ -28,25 +28,25 @@ func (i *ItBit) Run() {
 func (i *ItBit) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
 	var tickerPrice ticker.Price
 	tick, err := i.GetTicker(exchange.FormatExchangeCurrency(i.Name,
-		p).String())
+		p))
 	if err != nil {
 		return tickerPrice, err
 	}
 
-	tickerPrice.Pair = p
+	tickerPrice.Pair = &p
 	tickerPrice.Ask = tick.Ask
 	tickerPrice.Bid = tick.Bid
 	tickerPrice.Last = tick.LastPrice
 	tickerPrice.High = tick.High24h
 	tickerPrice.Low = tick.Low24h
 	tickerPrice.Volume = tick.Volume24h
-	ticker.ProcessTicker(i.GetName(), p, tickerPrice, assetType)
-	return ticker.GetTicker(i.Name, p, assetType)
+	ticker.ProcessTicker(i.GetName(), &p, tickerPrice, assetType)
+	return ticker.GetTicker(i.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (i *ItBit) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tickerNew, err := ticker.GetTicker(i.GetName(), p, assetType)
+	tickerNew, err := ticker.GetTicker(i.GetName(), &p, assetType)
 	if err != nil {
 		return i.UpdateTicker(p, assetType)
 	}
@@ -66,7 +66,7 @@ func (i *ItBit) GetOrderbookEx(p pair.CurrencyPair, assetType string) (orderbook
 func (i *ItBit) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
 	orderbookNew, err := i.GetOrderbook(exchange.FormatExchangeCurrency(i.Name,
-		p).String())
+		p))
 	if err != nil {
 		return orderBook, err
 	}

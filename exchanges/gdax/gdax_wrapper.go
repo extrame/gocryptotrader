@@ -68,29 +68,29 @@ func (g *GDAX) GetExchangeAccountInfo() (exchange.AccountInfo, error) {
 // UpdateTicker updates and returns the ticker for a currency pair
 func (g *GDAX) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
 	var tickerPrice ticker.Price
-	tick, err := g.GetTicker(exchange.FormatExchangeCurrency(g.Name, p).String())
+	tick, err := g.GetTicker(exchange.FormatExchangeCurrency(g.Name, p))
 	if err != nil {
 		return ticker.Price{}, err
 	}
 
-	stats, err := g.GetStats(exchange.FormatExchangeCurrency(g.Name, p).String())
+	stats, err := g.GetStats(exchange.FormatExchangeCurrency(g.Name, p))
 
 	if err != nil {
 		return ticker.Price{}, err
 	}
 
-	tickerPrice.Pair = p
+	tickerPrice.Pair = &p
 	tickerPrice.Volume = stats.Volume
 	tickerPrice.Last = tick.Price
 	tickerPrice.High = stats.High
 	tickerPrice.Low = stats.Low
-	ticker.ProcessTicker(g.GetName(), p, tickerPrice, assetType)
-	return ticker.GetTicker(g.Name, p, assetType)
+	ticker.ProcessTicker(g.GetName(), &p, tickerPrice, assetType)
+	return ticker.GetTicker(g.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (g *GDAX) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tickerNew, err := ticker.GetTicker(g.GetName(), p, assetType)
+	tickerNew, err := ticker.GetTicker(g.GetName(), &p, assetType)
 	if err != nil {
 		return g.UpdateTicker(p, assetType)
 	}
@@ -109,7 +109,7 @@ func (g *GDAX) GetOrderbookEx(p pair.CurrencyPair, assetType string) (orderbook.
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (g *GDAX) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	orderbookNew, err := g.GetOrderbook(exchange.FormatExchangeCurrency(g.Name, p).String(), 2)
+	orderbookNew, err := g.GetOrderbook(exchange.FormatExchangeCurrency(g.Name, p), 2)
 	if err != nil {
 		return orderBook, err
 	}

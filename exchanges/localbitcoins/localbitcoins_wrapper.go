@@ -32,20 +32,20 @@ func (l *LocalBitcoins) UpdateTicker(p pair.CurrencyPair, assetType string) (tic
 	}
 
 	for _, x := range l.GetEnabledCurrencies() {
-		currency := x.SecondCurrency.String()
+		currency := x.SecondCurrency
 		var tp ticker.Price
-		tp.Pair = x
+		tp.Pair = &x
 		tp.Last = tick[currency].Avg24h
 		tp.Volume = tick[currency].VolumeBTC
-		ticker.ProcessTicker(l.GetName(), x, tp, assetType)
+		ticker.ProcessTicker(l.GetName(), &x, tp, assetType)
 	}
 
-	return ticker.GetTicker(l.GetName(), p, assetType)
+	return ticker.GetTicker(l.GetName(), &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (l *LocalBitcoins) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tickerNew, err := ticker.GetTicker(l.GetName(), p, assetType)
+	tickerNew, err := ticker.GetTicker(l.GetName(), &p, assetType)
 	if err != nil {
 		return l.UpdateTicker(p, assetType)
 	}
@@ -64,7 +64,7 @@ func (l *LocalBitcoins) GetOrderbookEx(p pair.CurrencyPair, assetType string) (o
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (l *LocalBitcoins) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	orderbookNew, err := l.GetOrderbook(p.GetSecondCurrency().String())
+	orderbookNew, err := l.GetOrderbook(p.GetSecondCurrency())
 	if err != nil {
 		return orderBook, err
 	}

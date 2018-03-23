@@ -53,18 +53,18 @@ func printConvertCurrencyFormat(origCurrency string, origPrice float64) string {
 func printSummary(result ticker.Price, p pair.CurrencyPair, assetType, exchangeName string, err error) {
 	if err != nil {
 		log.Printf("Failed to get %s %s ticker. Error: %s",
-			p.Pair().String(),
+			p.Pair(),
 			exchangeName,
 			err)
 		return
 	}
 
 	stats.Add(exchangeName, p, assetType, result.Last, result.Volume)
-	if currency.IsFiatCurrency(p.SecondCurrency.String()) && p.SecondCurrency.String() != bot.config.FiatDisplayCurrency {
-		origCurrency := p.SecondCurrency.Upper().String()
+	if currency.IsFiatCurrency(p.SecondCurrency) && p.SecondCurrency != bot.config.FiatDisplayCurrency {
+		origCurrency := pair.UpperCurrencyItem(p.SecondCurrency)
 		log.Printf("%s %s %s: Last %s Ask %s Bid %s High %s Low %s Volume %.8f",
 			exchangeName,
-			exchange.FormatCurrency(p).String(),
+			exchange.FormatCurrency(p),
 			assetType,
 			printConvertCurrencyFormat(origCurrency, result.Last),
 			printConvertCurrencyFormat(origCurrency, result.Ask),
@@ -73,10 +73,10 @@ func printSummary(result ticker.Price, p pair.CurrencyPair, assetType, exchangeN
 			printConvertCurrencyFormat(origCurrency, result.Low),
 			result.Volume)
 	} else {
-		if currency.IsFiatCurrency(p.SecondCurrency.String()) && p.SecondCurrency.Upper().String() == bot.config.FiatDisplayCurrency {
+		if currency.IsFiatCurrency(p.SecondCurrency) && pair.UpperCurrencyItem(p.SecondCurrency) == bot.config.FiatDisplayCurrency {
 			log.Printf("%s %s %s: Last %s Ask %s Bid %s High %s Low %s Volume %.8f",
 				exchangeName,
-				exchange.FormatCurrency(p).String(),
+				exchange.FormatCurrency(p),
 				assetType,
 				printCurrencyFormat(result.Last),
 				printCurrencyFormat(result.Ask),
@@ -87,7 +87,7 @@ func printSummary(result ticker.Price, p pair.CurrencyPair, assetType, exchangeN
 		} else {
 			log.Printf("%s %s %s: Last %.8f Ask %.8f Bid %.8f High %.8f Low %.8f Volume %.8f",
 				exchangeName,
-				exchange.FormatCurrency(p).String(),
+				exchange.FormatCurrency(p),
 				assetType,
 				result.Last,
 				result.Ask,
@@ -102,7 +102,7 @@ func printSummary(result ticker.Price, p pair.CurrencyPair, assetType, exchangeN
 func printOrderbookSummary(result orderbook.Base, p pair.CurrencyPair, assetType, exchangeName string, err error) {
 	if err != nil {
 		log.Printf("Failed to get %s %s orderbook. Error: %s",
-			p.Pair().String(),
+			p.Pair(),
 			exchangeName,
 			err)
 		return
@@ -110,48 +110,48 @@ func printOrderbookSummary(result orderbook.Base, p pair.CurrencyPair, assetType
 	bidsAmount, bidsValue := result.CalculateTotalBids()
 	asksAmount, asksValue := result.CalculateTotalAsks()
 
-	if currency.IsFiatCurrency(p.SecondCurrency.String()) && p.SecondCurrency.String() != bot.config.FiatDisplayCurrency {
-		origCurrency := p.SecondCurrency.Upper().String()
+	if currency.IsFiatCurrency(p.SecondCurrency) && p.SecondCurrency != bot.config.FiatDisplayCurrency {
+		origCurrency := pair.UpperCurrencyItem(p.SecondCurrency)
 		log.Printf("%s %s %s: Orderbook Bids len: %d Amount: %f %s. Total value: %s Asks len: %d Amount: %f %s. Total value: %s",
 			exchangeName,
-			exchange.FormatCurrency(p).String(),
+			exchange.FormatCurrency(p),
 			assetType,
 			len(result.Bids),
 			bidsAmount,
-			p.FirstCurrency.String(),
+			p.FirstCurrency,
 			printConvertCurrencyFormat(origCurrency, bidsValue),
 			len(result.Asks),
 			asksAmount,
-			p.FirstCurrency.String(),
+			p.FirstCurrency,
 			printConvertCurrencyFormat(origCurrency, asksValue),
 		)
 	} else {
-		if currency.IsFiatCurrency(p.SecondCurrency.String()) && p.SecondCurrency.Upper().String() == bot.config.FiatDisplayCurrency {
+		if currency.IsFiatCurrency(p.SecondCurrency) && pair.UpperCurrencyItem(p.SecondCurrency) == bot.config.FiatDisplayCurrency {
 			log.Printf("%s %s %s: Orderbook Bids len: %d Amount: %f %s. Total value: %s Asks len: %d Amount: %f %s. Total value: %s",
 				exchangeName,
-				exchange.FormatCurrency(p).String(),
+				exchange.FormatCurrency(p),
 				assetType,
 				len(result.Bids),
 				bidsAmount,
-				p.FirstCurrency.String(),
+				p.FirstCurrency,
 				printCurrencyFormat(bidsValue),
 				len(result.Asks),
 				asksAmount,
-				p.FirstCurrency.String(),
+				p.FirstCurrency,
 				printCurrencyFormat(asksValue),
 			)
 		} else {
 			log.Printf("%s %s %s: Orderbook Bids len: %d Amount: %f %s. Total value: %f Asks len: %d Amount: %f %s. Total value: %f",
 				exchangeName,
-				exchange.FormatCurrency(p).String(),
+				exchange.FormatCurrency(p),
 				assetType,
 				len(result.Bids),
 				bidsAmount,
-				p.FirstCurrency.String(),
+				p.FirstCurrency,
 				bidsValue,
 				len(result.Asks),
 				asksAmount,
-				p.FirstCurrency.String(),
+				p.FirstCurrency,
 				asksValue,
 			)
 		}

@@ -27,53 +27,53 @@ func (o *OKEX) Run() {
 
 // UpdateTicker updates and returns the ticker for a currency pair
 func (o *OKEX) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	currency := exchange.FormatExchangeCurrency(o.Name, p).String()
+	currency := exchange.FormatExchangeCurrency(o.Name, p)
 	var tickerPrice ticker.Price
 
 	if assetType != ticker.Spot {
-		if p.SecondCurrency.String() == common.StringToLower("USDT") {
+		if p.SecondCurrency == common.StringToLower("USDT") {
 			p.SecondCurrency = "usd"
-			currency = exchange.FormatExchangeCurrency(o.Name, p).String()
+			currency = exchange.FormatExchangeCurrency(o.Name, p)
 		}
 		tick, err := o.GetContractPrice(currency, assetType)
 		if err != nil {
 			return tickerPrice, err
 		}
 
-		tickerPrice.Pair = p
+		tickerPrice.Pair = &p
 		tickerPrice.Ask = tick.Ticker.Sell
 		tickerPrice.Bid = tick.Ticker.Buy
 		tickerPrice.Low = tick.Ticker.Low
 		tickerPrice.Last = tick.Ticker.Last
 		tickerPrice.Volume = tick.Ticker.Vol
 		tickerPrice.High = tick.Ticker.High
-		ticker.ProcessTicker(o.GetName(), p, tickerPrice, assetType)
+		ticker.ProcessTicker(o.GetName(), &p, tickerPrice, assetType)
 	} else {
-		if p.SecondCurrency.String() == common.StringToLower("USD") {
+		if p.SecondCurrency == common.StringToLower("USD") {
 			p.SecondCurrency = "usdt"
-			currency = exchange.FormatExchangeCurrency(o.Name, p).String()
+			currency = exchange.FormatExchangeCurrency(o.Name, p)
 		}
 
 		tick, err := o.GetSpotTicker(currency)
 		if err != nil {
 			return tickerPrice, err
 		}
-		tickerPrice.Pair = p
+		tickerPrice.Pair = &p
 		tickerPrice.Ask = tick.Ticker.Sell
 		tickerPrice.Bid = tick.Ticker.Buy
 		tickerPrice.Low = tick.Ticker.Low
 		tickerPrice.Last = tick.Ticker.Last
 		tickerPrice.Volume = tick.Ticker.Vol
 		tickerPrice.High = tick.Ticker.High
-		ticker.ProcessTicker(o.GetName(), p, tickerPrice, ticker.Spot)
+		ticker.ProcessTicker(o.GetName(), &p, tickerPrice, ticker.Spot)
 
 	}
-	return ticker.GetTicker(o.Name, p, assetType)
+	return ticker.GetTicker(o.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (o *OKEX) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tickerNew, err := ticker.GetTicker(o.GetName(), p, assetType)
+	tickerNew, err := ticker.GetTicker(o.GetName(), &p, assetType)
 	if err != nil {
 		return o.UpdateTicker(p, assetType)
 	}
@@ -92,12 +92,12 @@ func (o *OKEX) GetOrderbookEx(currency pair.CurrencyPair, assetType string) (ord
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (o *OKEX) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	currency := exchange.FormatExchangeCurrency(o.Name, p).String()
+	currency := exchange.FormatExchangeCurrency(o.Name, p)
 
 	if assetType != ticker.Spot {
-		if p.SecondCurrency.String() == common.StringToLower("USDT") {
+		if p.SecondCurrency == common.StringToLower("USDT") {
 			p.SecondCurrency = "usd"
-			currency = exchange.FormatExchangeCurrency(o.Name, p).String()
+			currency = exchange.FormatExchangeCurrency(o.Name, p)
 		}
 		orderbookNew, err := o.GetContractMarketDepth(currency, assetType)
 		if err != nil {
@@ -115,9 +115,9 @@ func (o *OKEX) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook
 		}
 
 	} else {
-		if p.SecondCurrency.String() == common.StringToLower("USD") {
+		if p.SecondCurrency == common.StringToLower("USD") {
 			p.SecondCurrency = "usdt"
-			currency = exchange.FormatExchangeCurrency(o.Name, p).String()
+			currency = exchange.FormatExchangeCurrency(o.Name, p)
 		}
 
 		orderbookNew, err := o.GetSpotMarketDepth(currency, "200")

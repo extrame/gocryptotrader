@@ -366,14 +366,14 @@ func (c *Config) RetrieveConfigCurrencyPairs(enabledOnly bool) error {
 		}
 
 		for y := range pairs {
-			if !common.StringDataCompare(fiatCurrencies, pairs[y].FirstCurrency.Upper().String()) &&
-				!common.StringDataCompare(cryptoCurrencies, pairs[y].FirstCurrency.Upper().String()) {
-				cryptoCurrencies = append(cryptoCurrencies, pairs[y].FirstCurrency.Upper().String())
+			if !common.StringDataCompare(fiatCurrencies, pair.UpperCurrencyItem(pairs[y].FirstCurrency)) &&
+				!common.StringDataCompare(cryptoCurrencies, pair.UpperCurrencyItem(pairs[y].FirstCurrency)) {
+				cryptoCurrencies = append(cryptoCurrencies, pair.UpperCurrencyItem(pairs[y].FirstCurrency))
 			}
 
-			if !common.StringDataCompare(fiatCurrencies, pairs[y].SecondCurrency.Upper().String()) &&
-				!common.StringDataCompare(cryptoCurrencies, pairs[y].SecondCurrency.Upper().String()) {
-				cryptoCurrencies = append(cryptoCurrencies, pairs[y].SecondCurrency.Upper().String())
+			if !common.StringDataCompare(fiatCurrencies, pair.UpperCurrencyItem(pairs[y].SecondCurrency)) &&
+				!common.StringDataCompare(cryptoCurrencies, pair.UpperCurrencyItem(pairs[y].SecondCurrency)) {
+				cryptoCurrencies = append(cryptoCurrencies, pair.UpperCurrencyItem(pairs[y].SecondCurrency))
 			}
 		}
 	}

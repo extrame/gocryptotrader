@@ -73,27 +73,27 @@ func (k *Kraken) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Pri
 	if err != nil {
 		return tickerPrice, err
 	}
-	err = k.SetTicker(pairsCollated.String())
+	err = k.SetTicker(pairsCollated)
 	if err != nil {
 		return tickerPrice, err
 	}
 
 	for _, x := range pairs {
 		for y, z := range k.Ticker {
-			if common.StringContains(y, x.FirstCurrency.Upper().String()) && common.StringContains(y, x.SecondCurrency.Upper().String()) {
+			if common.StringContains(y, pair.UpperCurrencyItem(x.FirstCurrency)) && common.StringContains(y, pair.UpperCurrencyItem(x.SecondCurrency)) {
 				var tp ticker.Price
-				tp.Pair = x
+				tp.Pair = &x
 				tp.Last = z.Last
 				tp.Ask = z.Ask
 				tp.Bid = z.Bid
 				tp.High = z.High
 				tp.Low = z.Low
 				tp.Volume = z.Volume
-				ticker.ProcessTicker(k.GetName(), x, tp, assetType)
+				ticker.ProcessTicker(k.GetName(), &x, tp, assetType)
 			}
 		}
 	}
-	return ticker.GetTicker(k.GetName(), p, assetType)
+	return ticker.GetTicker(k.GetName(), &p, assetType)
 }
 
 // SetTicker sets ticker information from kraken
@@ -136,7 +136,7 @@ func (k *Kraken) SetTicker(symbol string) error {
 
 // GetTickerPrice returns the ticker for a currency pair
 func (k *Kraken) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tickerNew, err := ticker.GetTicker(k.GetName(), p, assetType)
+	tickerNew, err := ticker.GetTicker(k.GetName(), &p, assetType)
 	if err != nil {
 		return k.UpdateTicker(p, assetType)
 	}
@@ -155,7 +155,7 @@ func (k *Kraken) GetOrderbookEx(p pair.CurrencyPair, assetType string) (orderboo
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (k *Kraken) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	orderbookNew, err := k.GetDepth(exchange.FormatExchangeCurrency(k.GetName(), p).String())
+	orderbookNew, err := k.GetDepth(exchange.FormatExchangeCurrency(k.GetName(), p))
 	if err != nil {
 		return orderBook, err
 	}

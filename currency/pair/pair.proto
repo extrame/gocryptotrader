@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package pair;
+
+message CurrencyPair {
+    string Delimiter = 1;
+    string FirstCurrency =2;
+    string SecondCurrency = 3;
+}

@@ -86,24 +86,24 @@ func (b *Bittrex) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Pr
 	for _, x := range b.GetEnabledCurrencies() {
 		curr := exchange.FormatExchangeCurrency(b.Name, x)
 		for y := range tick {
-			if tick[y].MarketName == curr.String() {
-				tickerPrice.Pair = x
+			if tick[y].MarketName == curr {
+				tickerPrice.Pair = &x
 				tickerPrice.High = tick[y].High
 				tickerPrice.Low = tick[y].Low
 				tickerPrice.Ask = tick[y].Ask
 				tickerPrice.Bid = tick[y].Bid
 				tickerPrice.Last = tick[y].Last
 				tickerPrice.Volume = tick[y].Volume
-				ticker.ProcessTicker(b.GetName(), x, tickerPrice, assetType)
+				ticker.ProcessTicker(b.GetName(), &x, tickerPrice, assetType)
 			}
 		}
 	}
-	return ticker.GetTicker(b.Name, p, assetType)
+	return ticker.GetTicker(b.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (b *Bittrex) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tick, err := ticker.GetTicker(b.GetName(), p, ticker.Spot)
+	tick, err := ticker.GetTicker(b.GetName(), &p, ticker.Spot)
 	if err != nil {
 		return b.UpdateTicker(p, assetType)
 	}
@@ -122,7 +122,7 @@ func (b *Bittrex) GetOrderbookEx(p pair.CurrencyPair, assetType string) (orderbo
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (b *Bittrex) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	orderbookNew, err := b.GetOrderbook(exchange.FormatExchangeCurrency(b.GetName(), p).String())
+	orderbookNew, err := b.GetOrderbook(exchange.FormatExchangeCurrency(b.GetName(), p))
 	if err != nil {
 		return orderBook, err
 	}

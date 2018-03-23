@@ -47,7 +47,7 @@ func (b *Bitfinex) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.P
 
 	var pairs []string
 	for x := range enabledPairs {
-		pairs = append(pairs, "t"+enabledPairs[x].Pair().String())
+		pairs = append(pairs, "t"+enabledPairs[x].Pair())
 	}
 
 	tickerNew, err := b.GetTickersV2(common.JoinStrings(pairs, ","))
@@ -58,7 +58,7 @@ func (b *Bitfinex) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.P
 	for x := range tickerNew {
 		newP := pair.NewCurrencyPair(tickerNew[x].Symbol[1:4], tickerNew[x].Symbol[4:])
 		var tick ticker.Price
-		tick.Pair = newP
+		tick.Pair = &newP
 		tick.Ask = tickerNew[x].Ask
 		tick.Bid = tickerNew[x].Bid
 		tick.Low = tickerNew[x].Low
@@ -67,12 +67,12 @@ func (b *Bitfinex) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.P
 		tick.High = tickerNew[x].High
 		ticker.ProcessTicker(b.Name, tick.Pair, tick, assetType)
 	}
-	return ticker.GetTicker(b.Name, p, assetType)
+	return ticker.GetTicker(b.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (b *Bitfinex) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tick, err := ticker.GetTicker(b.GetName(), p, ticker.Spot)
+	tick, err := ticker.GetTicker(b.GetName(), &p, ticker.Spot)
 	if err != nil {
 		return b.UpdateTicker(p, assetType)
 	}
@@ -94,7 +94,7 @@ func (b *Bitfinex) UpdateOrderbook(p pair.CurrencyPair, assetType string) (order
 	urlVals := url.Values{}
 	urlVals.Set("limit_bids", "100")
 	urlVals.Set("limit_asks", "100")
-	orderbookNew, err := b.GetOrderbook(p.Pair().String(), urlVals)
+	orderbookNew, err := b.GetOrderbook(p.Pair(), urlVals)
 	if err != nil {
 		return orderBook, err
 	}

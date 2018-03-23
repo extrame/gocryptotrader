@@ -21,5 +21,7 @@ remote {
     ssh root@47.91.196.173
 }
 grpc {
-    protoc ./grpc/cryptotrader.proto --go_out=Mgoogle/protobuf/empty.proto=github.com/golang/protobuf/ptypes/empty,plugins=grpc:.
+    protoc ./currency/pair/pair.proto --go_out=plugins=grpc:.
+    protoc -I. -I=/Users/liuming/go/src ./exchanges/ticker/price.proto --go_out=Mgoogle/protobuf/empty.proto=github.com/golang/protobuf/ptypes/empty,plugins=grpc:/Users/liuming/go/src
+    protoc -I. -I=/Users/liuming/go/src ./grpc/cryptotrader.proto --go_out=Mgoogle/protobuf/empty.proto=github.com/golang/protobuf/ptypes/empty,plugins=grpc:.
 }

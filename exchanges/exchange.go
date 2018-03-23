@@ -238,10 +238,10 @@ func GetExchangeFormatCurrencySeperator(exchName string) bool {
 	return false
 }
 
-// GetAndFormatExchangeCurrencies returns a pair.CurrencyItem string containing
+// GetAndFormatExchangeCurrencies returns a string string containing
 // the exchanges formatted currency pairs
-func GetAndFormatExchangeCurrencies(exchName string, pairs []pair.CurrencyPair) (pair.CurrencyItem, error) {
-	var currencyItems pair.CurrencyItem
+func GetAndFormatExchangeCurrencies(exchName string, pairs []pair.CurrencyPair) (string, error) {
+	var currencyItems string
 	cfg := config.GetConfig()
 	exch, err := cfg.GetExchangeConfig(exchName)
 	if err != nil {
@@ -253,14 +253,14 @@ func GetAndFormatExchangeCurrencies(exchName string, pairs []pair.CurrencyPair) 
 		if x == len(pairs)-1 {
 			continue
 		}
-		currencyItems += pair.CurrencyItem(exch.RequestCurrencyPairFormat.Separator)
+		currencyItems += exch.RequestCurrencyPairFormat.Separator
 	}
 	return currencyItems, nil
 }
 
 // FormatExchangeCurrency is a method that formats and returns a currency pair
 // based on the user currency display preferences
-func FormatExchangeCurrency(exchName string, p pair.CurrencyPair) pair.CurrencyItem {
+func FormatExchangeCurrency(exchName string, p pair.CurrencyPair) string {
 	cfg := config.GetConfig()
 	exch, _ := cfg.GetExchangeConfig(exchName)
 
@@ -270,7 +270,7 @@ func FormatExchangeCurrency(exchName string, p pair.CurrencyPair) pair.CurrencyI
 
 // FormatCurrency is a method that formats and returns a currency pair
 // based on the user currency display preferences
-func FormatCurrency(p pair.CurrencyPair) pair.CurrencyItem {
+func FormatCurrency(p pair.CurrencyPair) string {
 	cfg := config.GetConfig()
 	return p.Display(cfg.CurrencyPairFormat.Delimiter,
 		cfg.CurrencyPairFormat.Uppercase)
@@ -319,7 +319,7 @@ func (e *Base) SetCurrencies(pairs []pair.CurrencyPair, enabledPairs bool) error
 	var pairsStr []string
 	for x := range pairs {
 		pairsStr = append(pairsStr, pairs[x].Display(exchCfg.ConfigCurrencyPairFormat.Delimiter,
-			exchCfg.ConfigCurrencyPairFormat.Uppercase).String())
+			exchCfg.ConfigCurrencyPairFormat.Uppercase))
 	}
 
 	if enabledPairs {

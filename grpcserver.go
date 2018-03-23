@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 
+	"github.com/extrame/gocryptotrader/exchanges/ticker"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
@@ -14,34 +15,13 @@ import (
 type Server struct {
 }
 
-func (s *Server) GetTickers(context.Context, *empty.Empty) (*ig.EnabledExchangeCurrencies, error) {
-	currencies := GetAllActiveTickers()
-	var eec = new(ig.EnabledExchangeCurrencies)
-	eec.ExchangeCurrencies = make([]*ig.ExchangeCurrencies, len(currencies))
-	for k, v := range currencies {
-		var evs = make([]*ig.Value, len(v.ExchangeValues))
-		for k1, v1 := range v.ExchangeValues {
-			val := ig.Value{
-				&ig.CurrencyPair{
-					v1.Pair.Delimiter,
-					v1.Pair.FirstCurrency.String(),
-					v1.Pair.SecondCurrency.String(),
-				},
-				v1.CurrencyPair,
-				v1.Last,
-				v1.High,
-				v1.Low,
-				v1.Bid,
-				v1.Ask,
-				v1.Volume,
-				v1.PriceATH,
-			}
-			evs[k1] = &val
-		}
-		var ec = ig.ExchangeCurrencies{v.ExchangeName, evs}
-		eec.ExchangeCurrencies[k] = &ec
-	}
-	return eec, nil
+func (s *Server) GetTickers(context.Context, *empty.Empty) (*ig.AllEnabledExchangeCurrencies, error) {
+	all := GetAllActiveTickers()
+	return &all, nil
+}
+
+func (s *Server) GetTicker(c context.Context, req *ig.SpecificTicker) (*ticker.Price, error) {
+	return GetSpecificTicker(req.Currency, req.ExchangeName, req.AssetType)
 }
 
 //StartGrpcServer start the grpc server

@@ -481,7 +481,7 @@ func (b *Binance) CheckLimit(limit int64) error {
 func (b *Binance) CheckSymbol(symbol string) error {
 	enPairs := b.GetEnabledCurrencies()
 	for x := range enPairs {
-		if exchange.FormatExchangeCurrency(b.Name, enPairs[x]).String() == symbol {
+		if exchange.FormatExchangeCurrency(b.Name, enPairs[x]) == symbol {
 			return nil
 		}
 	}

@@ -33,23 +33,23 @@ func (l *LakeBTC) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Pr
 	}
 
 	for _, x := range l.GetEnabledCurrencies() {
-		currency := exchange.FormatExchangeCurrency(l.Name, x).String()
+		currency := exchange.FormatExchangeCurrency(l.Name, x)
 		var tickerPrice ticker.Price
-		tickerPrice.Pair = x
+		tickerPrice.Pair = &x
 		tickerPrice.Ask = tick[currency].Ask
 		tickerPrice.Bid = tick[currency].Bid
 		tickerPrice.Volume = tick[currency].Volume
 		tickerPrice.High = tick[currency].High
 		tickerPrice.Low = tick[currency].Low
 		tickerPrice.Last = tick[currency].Last
-		ticker.ProcessTicker(l.GetName(), x, tickerPrice, assetType)
+		ticker.ProcessTicker(l.GetName(), &x, tickerPrice, assetType)
 	}
-	return ticker.GetTicker(l.Name, p, assetType)
+	return ticker.GetTicker(l.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (l *LakeBTC) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tickerNew, err := ticker.GetTicker(l.GetName(), p, assetType)
+	tickerNew, err := ticker.GetTicker(l.GetName(), &p, assetType)
 	if err != nil {
 		return l.UpdateTicker(p, assetType)
 	}
@@ -68,7 +68,7 @@ func (l *LakeBTC) GetOrderbookEx(p pair.CurrencyPair, assetType string) (orderbo
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (l *LakeBTC) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	orderbookNew, err := l.GetOrderBook(p.Pair().String())
+	orderbookNew, err := l.GetOrderBook(p.Pair())
 	if err != nil {
 		return orderBook, err
 	}

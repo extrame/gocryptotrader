@@ -55,22 +55,22 @@ func (po *Poloniex) UpdateTicker(currencyPair pair.CurrencyPair, assetType strin
 
 	for _, x := range po.GetEnabledCurrencies() {
 		var tp ticker.Price
-		curr := exchange.FormatExchangeCurrency(po.GetName(), x).String()
-		tp.Pair = x
+		curr := exchange.FormatExchangeCurrency(po.GetName(), x)
+		tp.Pair = &x
 		tp.Ask = tick[curr].LowestAsk
 		tp.Bid = tick[curr].HighestBid
 		tp.High = tick[curr].High24Hr
 		tp.Last = tick[curr].Last
 		tp.Low = tick[curr].Low24Hr
 		tp.Volume = tick[curr].BaseVolume
-		ticker.ProcessTicker(po.GetName(), x, tp, assetType)
+		ticker.ProcessTicker(po.GetName(), &x, tp, assetType)
 	}
-	return ticker.GetTicker(po.Name, currencyPair, assetType)
+	return ticker.GetTicker(po.Name, &currencyPair, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (po *Poloniex) GetTickerPrice(currencyPair pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tickerNew, err := ticker.GetTicker(po.GetName(), currencyPair, assetType)
+	tickerNew, err := ticker.GetTicker(po.GetName(), &currencyPair, assetType)
 	if err != nil {
 		return po.UpdateTicker(currencyPair, assetType)
 	}
@@ -95,7 +95,7 @@ func (po *Poloniex) UpdateOrderbook(currencyPair pair.CurrencyPair, assetType st
 	}
 
 	for _, x := range po.GetEnabledCurrencies() {
-		currency := exchange.FormatExchangeCurrency(po.Name, x).String()
+		currency := exchange.FormatExchangeCurrency(po.Name, x)
 		data, ok := orderbookNew.Data[currency]
 		if !ok {
 			continue

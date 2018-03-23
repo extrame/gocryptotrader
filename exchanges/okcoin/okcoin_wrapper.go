@@ -31,7 +31,7 @@ func (o *OKCoin) Run() {
 
 // UpdateTicker updates and returns the ticker for a currency pair
 func (o *OKCoin) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	currency := exchange.FormatExchangeCurrency(o.Name, p).String()
+	currency := exchange.FormatExchangeCurrency(o.Name, p)
 	var tickerPrice ticker.Price
 
 	if assetType != ticker.Spot && o.APIUrl == okcoinAPIURL {
@@ -39,35 +39,35 @@ func (o *OKCoin) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Pri
 		if err != nil {
 			return tickerPrice, err
 		}
-		tickerPrice.Pair = p
+		tickerPrice.Pair = &p
 		tickerPrice.Ask = tick.Sell
 		tickerPrice.Bid = tick.Buy
 		tickerPrice.Low = tick.Low
 		tickerPrice.Last = tick.Last
 		tickerPrice.Volume = tick.Vol
 		tickerPrice.High = tick.High
-		ticker.ProcessTicker(o.GetName(), p, tickerPrice, assetType)
+		ticker.ProcessTicker(o.GetName(), &p, tickerPrice, assetType)
 	} else {
 		tick, err := o.GetTicker(currency)
 		if err != nil {
 			return tickerPrice, err
 		}
-		tickerPrice.Pair = p
+		tickerPrice.Pair = &p
 		tickerPrice.Ask = tick.Sell
 		tickerPrice.Bid = tick.Buy
 		tickerPrice.Low = tick.Low
 		tickerPrice.Last = tick.Last
 		tickerPrice.Volume = tick.Vol
 		tickerPrice.High = tick.High
-		ticker.ProcessTicker(o.GetName(), p, tickerPrice, ticker.Spot)
+		ticker.ProcessTicker(o.GetName(), &p, tickerPrice, ticker.Spot)
 
 	}
-	return ticker.GetTicker(o.Name, p, assetType)
+	return ticker.GetTicker(o.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (o *OKCoin) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tickerNew, err := ticker.GetTicker(o.GetName(), p, assetType)
+	tickerNew, err := ticker.GetTicker(o.GetName(), &p, assetType)
 	if err != nil {
 		return o.UpdateTicker(p, assetType)
 	}
@@ -86,7 +86,7 @@ func (o *OKCoin) GetOrderbookEx(currency pair.CurrencyPair, assetType string) (o
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (o *OKCoin) UpdateOrderbook(currency pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	orderbookNew, err := o.GetOrderBook(exchange.FormatExchangeCurrency(o.Name, currency).String(), 200, false)
+	orderbookNew, err := o.GetOrderBook(exchange.FormatExchangeCurrency(o.Name, currency), 200, false)
 	if err != nil {
 		return orderBook, err
 	}

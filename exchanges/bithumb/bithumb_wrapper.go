@@ -28,27 +28,27 @@ func (b *Bithumb) Run() {
 // UpdateTicker updates and returns the ticker for a currency pair
 func (b *Bithumb) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
 	var tickerPrice ticker.Price
-	item := p.GetFirstCurrency().String()
+	item := p.GetFirstCurrency()
 	tick, err := b.GetTicker(item)
 	if err != nil {
 		return tickerPrice, err
 	}
 
-	tickerPrice.Pair = p
+	tickerPrice.Pair = &p
 	tickerPrice.Ask = tick.Data.SellPrice
 	tickerPrice.Bid = tick.Data.BuyPrice
 	tickerPrice.Low = tick.Data.MinPrice
 	tickerPrice.Last = tick.Data.ClosingPrice
 	tickerPrice.Volume = tick.Data.Volume1Day
 	tickerPrice.High = tick.Data.MaxPrice
-	ticker.ProcessTicker(b.GetName(), p, tickerPrice, assetType)
+	ticker.ProcessTicker(b.GetName(), &p, tickerPrice, assetType)
 
-	return ticker.GetTicker(b.Name, p, assetType)
+	return ticker.GetTicker(b.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (b *Bithumb) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tickerNew, err := ticker.GetTicker(b.GetName(), p, assetType)
+	tickerNew, err := ticker.GetTicker(b.GetName(), &p, assetType)
 	if err != nil {
 		return b.UpdateTicker(p, assetType)
 	}
@@ -67,7 +67,7 @@ func (b *Bithumb) GetOrderbookEx(currency pair.CurrencyPair, assetType string) (
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (b *Bithumb) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	currency := p.GetFirstCurrency().String()
+	currency := p.GetFirstCurrency()
 
 	orderbookNew, err := b.GetOrderBook(currency)
 	if err != nil {

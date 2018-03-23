@@ -4,70 +4,64 @@ import (
 	"strings"
 )
 
-// CurrencyItem is an exported string with methods to manipulate the data instead
-// of using array/slice access modifiers
-type CurrencyItem string
+// // CurrencyItem is an exported string with methods to manipulate the data instead
+// // of using array/slice access modifiers
+// type CurrencyItem string
 
 // Lower converts the CurrencyItem object c to lowercase
-func (c CurrencyItem) Lower() CurrencyItem {
-	return CurrencyItem(strings.ToLower(string(c)))
+func LowerCurrencyItem(c string) string {
+	return strings.ToLower(c)
 }
 
 // Upper converts the CurrencyItem object c to uppercase
-func (c CurrencyItem) Upper() CurrencyItem {
-	return CurrencyItem(strings.ToUpper(string(c)))
+func UpperCurrencyItem(c string) string {
+	return strings.ToUpper(c)
 }
 
-// String converts the CurrencyItem object c to string
-func (c CurrencyItem) String() string {
-	return string(c)
-}
+// // CurrencyPair holds currency pair information
+// type CurrencyPair struct {
+// 	Delimiter      string       `json:"delimiter"`
+// 	FirstCurrency  CurrencyItem `json:"first_currency"`
+// 	SecondCurrency CurrencyItem `json:"second_currency"`
+// }
 
-// CurrencyPair holds currency pair information
-type CurrencyPair struct {
-	Delimiter      string       `json:"delimiter"`
-	FirstCurrency  CurrencyItem `json:"first_currency"`
-	SecondCurrency CurrencyItem `json:"second_currency"`
-}
+// // GetFirstCurrencyItem returns the first currency item
+// func (c *CurrencyPair) GetFirstCurrencyItem() CurrencyItem {
+// 	return CurrencyItem(c.FirstCurrency)
+// }
 
-// GetFirstCurrency returns the first currency item
-func (c CurrencyPair) GetFirstCurrency() CurrencyItem {
-	return c.FirstCurrency
-}
-
-// GetSecondCurrency returns the second currency item
-func (c CurrencyPair) GetSecondCurrency() CurrencyItem {
-	return c.SecondCurrency
-}
+// // GetSecondCurrencyItem returns the second currency item
+// func (c *CurrencyPair) GetSecondCurrencyItem() CurrencyItem {
+// 	return CurrencyItem(c.SecondCurrency)
+// }
 
 // Pair returns a currency pair string
-func (c CurrencyPair) Pair() CurrencyItem {
-	return c.FirstCurrency + CurrencyItem(c.Delimiter) + c.SecondCurrency
+func (c *CurrencyPair) Pair() string {
+	return c.FirstCurrency + c.Delimiter + c.SecondCurrency
 }
 
 // Display formats and returns the currency based on user preferences,
 // overriding the default Pair() display
-func (c CurrencyPair) Display(delimiter string, uppercase bool) CurrencyItem {
-	var pair CurrencyItem
+func (c *CurrencyPair) Display(delimiter string, uppercase bool) (pair string) {
 
 	if delimiter != "" {
-		pair = c.FirstCurrency + CurrencyItem(delimiter) + c.SecondCurrency
+		pair = c.FirstCurrency + delimiter + c.SecondCurrency
 	} else {
 		pair = c.FirstCurrency + c.SecondCurrency
 	}
 
 	if uppercase {
-		return pair.Upper()
+		return UpperCurrencyItem(pair)
 	}
-	return pair.Lower()
+	return LowerCurrencyItem(pair)
 }
 
 // Equal compares two currency pairs and returns whether or not they are equal
-func (c CurrencyPair) Equal(p CurrencyPair) bool {
-	if c.FirstCurrency.Upper() == p.FirstCurrency.Upper() &&
-		c.SecondCurrency.Upper() == p.SecondCurrency.Upper() ||
-		c.FirstCurrency.Upper() == p.SecondCurrency.Upper() &&
-			c.SecondCurrency.Upper() == p.FirstCurrency.Upper() {
+func (c *CurrencyPair) Equal(p CurrencyPair) bool {
+	if UpperCurrencyItem(c.FirstCurrency) == UpperCurrencyItem(p.FirstCurrency) &&
+		UpperCurrencyItem(c.SecondCurrency) == UpperCurrencyItem(p.SecondCurrency) ||
+		UpperCurrencyItem(c.FirstCurrency) == UpperCurrencyItem(p.SecondCurrency) &&
+			UpperCurrencyItem(c.SecondCurrency) == UpperCurrencyItem(p.FirstCurrency) {
 		return true
 	}
 	return false
@@ -79,16 +73,16 @@ func NewCurrencyPairDelimiter(currency, delimiter string) CurrencyPair {
 	result := strings.Split(currency, delimiter)
 	return CurrencyPair{
 		Delimiter:      delimiter,
-		FirstCurrency:  CurrencyItem(result[0]),
-		SecondCurrency: CurrencyItem(result[1]),
+		FirstCurrency:  result[0],
+		SecondCurrency: result[1],
 	}
 }
 
 // NewCurrencyPair returns a CurrencyPair without a delimiter
 func NewCurrencyPair(firstCurrency, secondCurrency string) CurrencyPair {
 	return CurrencyPair{
-		FirstCurrency:  CurrencyItem(firstCurrency),
-		SecondCurrency: CurrencyItem(secondCurrency),
+		FirstCurrency:  firstCurrency,
+		SecondCurrency: secondCurrency,
 	}
 }
 

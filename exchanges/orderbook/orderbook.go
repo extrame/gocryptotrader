@@ -38,7 +38,7 @@ type Base struct {
 
 // Orderbook holds the orderbook information for a currency pair and type
 type Orderbook struct {
-	Orderbook    map[pair.CurrencyItem]map[pair.CurrencyItem]map[string]Base
+	Orderbook    map[string]map[string]map[string]Base
 	ExchangeName string
 }
 
@@ -81,7 +81,7 @@ func GetOrderbook(exchange string, p pair.CurrencyPair, orderbookType string) (B
 		return Base{}, err
 	}
 
-	if !FirstCurrencyExists(exchange, p.GetFirstCurrency()) {
+	if !FirstCurrencyExists(exchange, p.FirstCurrency) {
 		return Base{}, errors.New(ErrPrimaryCurrencyNotFound)
 	}
 
@@ -89,7 +89,7 @@ func GetOrderbook(exchange string, p pair.CurrencyPair, orderbookType string) (B
 		return Base{}, errors.New(ErrSecondaryCurrencyNotFound)
 	}
 
-	return orderbook.Orderbook[p.GetFirstCurrency()][p.GetSecondCurrency()][orderbookType], nil
+	return orderbook.Orderbook[p.FirstCurrency][p.SecondCurrency][orderbookType], nil
 }
 
 // GetOrderbookByExchange returns an exchange orderbook
@@ -104,7 +104,7 @@ func GetOrderbookByExchange(exchange string) (*Orderbook, error) {
 
 // FirstCurrencyExists checks to see if the first currency of the orderbook map
 // exists
-func FirstCurrencyExists(exchange string, currency pair.CurrencyItem) bool {
+func FirstCurrencyExists(exchange string, currency string) bool {
 	for _, y := range Orderbooks {
 		if y.ExchangeName == exchange {
 			if _, ok := y.Orderbook[currency]; ok {
@@ -120,8 +120,8 @@ func FirstCurrencyExists(exchange string, currency pair.CurrencyItem) bool {
 func SecondCurrencyExists(exchange string, p pair.CurrencyPair) bool {
 	for _, y := range Orderbooks {
 		if y.ExchangeName == exchange {
-			if _, ok := y.Orderbook[p.GetFirstCurrency()]; ok {
-				if _, ok := y.Orderbook[p.GetFirstCurrency()][p.GetSecondCurrency()]; ok {
+			if _, ok := y.Orderbook[p.FirstCurrency]; ok {
+				if _, ok := y.Orderbook[p.FirstCurrency][p.SecondCurrency]; ok {
 					return true
 				}
 			}
@@ -134,8 +134,8 @@ func SecondCurrencyExists(exchange string, p pair.CurrencyPair) bool {
 func CreateNewOrderbook(exchangeName string, p pair.CurrencyPair, orderbookNew Base, orderbookType string) Orderbook {
 	orderbook := Orderbook{}
 	orderbook.ExchangeName = exchangeName
-	orderbook.Orderbook = make(map[pair.CurrencyItem]map[pair.CurrencyItem]map[string]Base)
-	a := make(map[pair.CurrencyItem]map[string]Base)
+	orderbook.Orderbook = make(map[string]map[string]map[string]Base)
+	a := make(map[string]map[string]Base)
 	b := make(map[string]Base)
 	b[orderbookType] = orderbookNew
 	a[p.SecondCurrency] = b
@@ -147,7 +147,7 @@ func CreateNewOrderbook(exchangeName string, p pair.CurrencyPair, orderbookNew B
 // ProcessOrderbook processes incoming orderbooks, creating or updating the
 // Orderbook list
 func ProcessOrderbook(exchangeName string, p pair.CurrencyPair, orderbookNew Base, orderbookType string) {
-	orderbookNew.CurrencyPair = p.Pair().String()
+	orderbookNew.CurrencyPair = p.Pair()
 	orderbookNew.LastUpdated = time.Now()
 
 	if len(Orderbooks) == 0 {
@@ -161,7 +161,7 @@ func ProcessOrderbook(exchangeName string, p pair.CurrencyPair, orderbookNew Bas
 		return
 	}
 
-	if FirstCurrencyExists(exchangeName, p.GetFirstCurrency()) {
+	if FirstCurrencyExists(exchangeName, p.FirstCurrency) {
 		if !SecondCurrencyExists(exchangeName, p) {
 			a := orderbook.Orderbook[p.FirstCurrency]
 			b := make(map[string]Base)
@@ -172,7 +172,7 @@ func ProcessOrderbook(exchangeName string, p pair.CurrencyPair, orderbookNew Bas
 		}
 	}
 
-	a := make(map[pair.CurrencyItem]map[string]Base)
+	a := make(map[string]map[string]Base)
 	b := make(map[string]Base)
 	b[orderbookType] = orderbookNew
 	a[p.SecondCurrency] = b

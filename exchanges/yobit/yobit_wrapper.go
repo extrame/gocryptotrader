@@ -33,29 +33,29 @@ func (y *Yobit) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Pric
 		return tickerPrice, err
 	}
 
-	result, err := y.GetTicker(pairsCollated.String())
+	result, err := y.GetTicker(pairsCollated)
 	if err != nil {
 		return tickerPrice, err
 	}
 
 	for _, x := range y.GetEnabledCurrencies() {
-		currency := exchange.FormatExchangeCurrency(y.Name, x).Lower().String()
+		currency := pair.LowerCurrencyItem(exchange.FormatExchangeCurrency(y.Name, x))
 		var tickerPrice ticker.Price
-		tickerPrice.Pair = x
+		tickerPrice.Pair = &x
 		tickerPrice.Last = result[currency].Last
 		tickerPrice.Ask = result[currency].Sell
 		tickerPrice.Bid = result[currency].Buy
 		tickerPrice.Last = result[currency].Last
 		tickerPrice.Low = result[currency].Low
 		tickerPrice.Volume = result[currency].VolumeCurrent
-		ticker.ProcessTicker(y.Name, x, tickerPrice, assetType)
+		ticker.ProcessTicker(y.Name, &x, tickerPrice, assetType)
 	}
-	return ticker.GetTicker(y.Name, p, assetType)
+	return ticker.GetTicker(y.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (y *Yobit) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tick, err := ticker.GetTicker(y.GetName(), p, assetType)
+	tick, err := ticker.GetTicker(y.GetName(), &p, assetType)
 	if err != nil {
 		return y.UpdateTicker(p, assetType)
 	}
@@ -74,7 +74,7 @@ func (y *Yobit) GetOrderbookEx(p pair.CurrencyPair, assetType string) (orderbook
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (y *Yobit) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	orderbookNew, err := y.GetDepth(exchange.FormatExchangeCurrency(y.Name, p).String())
+	orderbookNew, err := y.GetDepth(exchange.FormatExchangeCurrency(y.Name, p))
 	if err != nil {
 		return orderBook, err
 	}

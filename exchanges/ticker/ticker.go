@@ -23,21 +23,21 @@ var (
 )
 
 // Price struct stores the currency pair and pricing information
-type Price struct {
-	Pair         pair.CurrencyPair `json:"Pair"`
-	CurrencyPair string            `json:"CurrencyPair"`
-	Last         float64           `json:"Last"`
-	High         float64           `json:"High"`
-	Low          float64           `json:"Low"`
-	Bid          float64           `json:"Bid"`
-	Ask          float64           `json:"Ask"`
-	Volume       float64           `json:"Volume"`
-	PriceATH     float64           `json:"PriceATH"`
-}
+// type Price struct {
+// 	Pair         pair.CurrencyPair `json:"Pair"`
+// 	CurrencyPair string            `json:"CurrencyPair"`
+// 	Last         float64           `json:"Last"`
+// 	High         float64           `json:"High"`
+// 	Low          float64           `json:"Low"`
+// 	Bid          float64           `json:"Bid"`
+// 	Ask          float64           `json:"Ask"`
+// 	Volume       float64           `json:"Volume"`
+// 	PriceATH     float64           `json:"PriceATH"`
+// }
 
 // Ticker struct holds the ticker information for a currency pair and type
 type Ticker struct {
-	Price        map[pair.CurrencyItem]map[pair.CurrencyItem]map[string]Price
+	Price        map[string]map[string]map[string]Price
 	ExchangeName string
 }
 
@@ -66,7 +66,7 @@ func (t *Ticker) PriceToString(p pair.CurrencyPair, priceType, tickerType string
 }
 
 // GetTicker checks and returns a requested ticker if it exists
-func GetTicker(exchange string, p pair.CurrencyPair, tickerType string) (Price, error) {
+func GetTicker(exchange string, p *pair.CurrencyPair, tickerType string) (Price, error) {
 	ticker, err := GetTickerByExchange(exchange)
 	if err != nil {
 		return Price{}, err
@@ -95,7 +95,7 @@ func GetTickerByExchange(exchange string) (*Ticker, error) {
 
 // FirstCurrencyExists checks to see if the first currency of the Price map
 // exists
-func FirstCurrencyExists(exchange string, currency pair.CurrencyItem) bool {
+func FirstCurrencyExists(exchange string, currency string) bool {
 	for _, y := range Tickers {
 		if y.ExchangeName == exchange {
 			if _, ok := y.Price[currency]; ok {
@@ -108,7 +108,7 @@ func FirstCurrencyExists(exchange string, currency pair.CurrencyItem) bool {
 
 // SecondCurrencyExists checks to see if the second currency of the Price map
 // exists
-func SecondCurrencyExists(exchange string, p pair.CurrencyPair) bool {
+func SecondCurrencyExists(exchange string, p *pair.CurrencyPair) bool {
 	for _, y := range Tickers {
 		if y.ExchangeName == exchange {
 			if _, ok := y.Price[p.GetFirstCurrency()]; ok {
@@ -122,11 +122,11 @@ func SecondCurrencyExists(exchange string, p pair.CurrencyPair) bool {
 }
 
 // CreateNewTicker creates a new Ticker
-func CreateNewTicker(exchangeName string, p pair.CurrencyPair, tickerNew Price, tickerType string) Ticker {
+func CreateNewTicker(exchangeName string, p *pair.CurrencyPair, tickerNew Price, tickerType string) Ticker {
 	ticker := Ticker{}
 	ticker.ExchangeName = exchangeName
-	ticker.Price = make(map[pair.CurrencyItem]map[pair.CurrencyItem]map[string]Price)
-	a := make(map[pair.CurrencyItem]map[string]Price)
+	ticker.Price = make(map[string]map[string]map[string]Price)
+	a := make(map[string]map[string]Price)
 	b := make(map[string]Price)
 	b[tickerType] = tickerNew
 	a[p.SecondCurrency] = b
@@ -137,8 +137,8 @@ func CreateNewTicker(exchangeName string, p pair.CurrencyPair, tickerNew Price, 
 
 // ProcessTicker processes incoming tickers, creating or updating the Tickers
 // list
-func ProcessTicker(exchangeName string, p pair.CurrencyPair, tickerNew Price, tickerType string) {
-	tickerNew.CurrencyPair = p.Pair().String()
+func ProcessTicker(exchangeName string, p *pair.CurrencyPair, tickerNew Price, tickerType string) {
+	tickerNew.CurrencyPair = p.Pair()
 	if len(Tickers) == 0 {
 		CreateNewTicker(exchangeName, p, tickerNew, tickerType)
 		return
@@ -161,7 +161,7 @@ func ProcessTicker(exchangeName string, p pair.CurrencyPair, tickerNew Price, ti
 		}
 	}
 
-	a := make(map[pair.CurrencyItem]map[string]Price)
+	a := make(map[string]map[string]Price)
 	b := make(map[string]Price)
 	b[tickerType] = tickerNew
 	a[p.SecondCurrency] = b

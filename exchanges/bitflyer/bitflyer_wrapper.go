@@ -49,25 +49,25 @@ func (b *Bitflyer) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.P
 
 	p = b.CheckFXString(p)
 
-	tickerNew, err := b.GetTicker(p.Pair().String())
+	tickerNew, err := b.GetTicker(p.Pair())
 	if err != nil {
 		return tickerPrice, err
 	}
 
-	tickerPrice.Pair = p
+	tickerPrice.Pair = &p
 	tickerPrice.Ask = tickerNew.BestAsk
 	tickerPrice.Bid = tickerNew.BestBid
 	// tickerPrice.Low
 	tickerPrice.Last = tickerNew.Last
 	tickerPrice.Volume = tickerNew.Volume
 	// tickerPrice.High
-	ticker.ProcessTicker(b.GetName(), p, tickerPrice, assetType)
-	return ticker.GetTicker(b.Name, p, assetType)
+	ticker.ProcessTicker(b.GetName(), &p, tickerPrice, assetType)
+	return ticker.GetTicker(b.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (b *Bitflyer) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tick, err := ticker.GetTicker(b.GetName(), p, ticker.Spot)
+	tick, err := ticker.GetTicker(b.GetName(), &p, ticker.Spot)
 	if err != nil {
 		return b.UpdateTicker(p, assetType)
 	}
@@ -76,7 +76,7 @@ func (b *Bitflyer) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker
 
 // CheckFXString upgrades currency pair if needed
 func (b *Bitflyer) CheckFXString(p pair.CurrencyPair) pair.CurrencyPair {
-	if common.StringContains(p.GetFirstCurrency().String(), "FX") {
+	if common.StringContains(p.GetFirstCurrency(), "FX") {
 		p.FirstCurrency = "FX_BTC"
 		return p
 	}
@@ -98,7 +98,7 @@ func (b *Bitflyer) UpdateOrderbook(p pair.CurrencyPair, assetType string) (order
 
 	p = b.CheckFXString(p)
 
-	orderbookNew, err := b.GetOrderBook(p.Pair().String())
+	orderbookNew, err := b.GetOrderBook(p.Pair())
 	if err != nil {
 		return orderBook, err
 	}

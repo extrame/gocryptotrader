@@ -137,18 +137,18 @@ func IsCryptocurrency(currency string) bool {
 
 // IsCryptoPair checks to see if the pair is a crypto pair. For example, BTCLTC
 func IsCryptoPair(p pair.CurrencyPair) bool {
-	return IsCryptocurrency(p.FirstCurrency.String()) && IsCryptocurrency(p.SecondCurrency.String())
+	return IsCryptocurrency(p.FirstCurrency) && IsCryptocurrency(p.SecondCurrency)
 }
 
 // IsCryptoFiatPair checks to see if the pair is a crypto fiat pair. For example, BTCUSD
 func IsCryptoFiatPair(p pair.CurrencyPair) bool {
-	return IsCryptocurrency(p.FirstCurrency.String()) && !IsCryptocurrency(p.SecondCurrency.String()) ||
-		!IsCryptocurrency(p.FirstCurrency.String()) && IsCryptocurrency(p.SecondCurrency.String())
+	return IsCryptocurrency(p.FirstCurrency) && !IsCryptocurrency(p.SecondCurrency) ||
+		!IsCryptocurrency(p.FirstCurrency) && IsCryptocurrency(p.SecondCurrency)
 }
 
 // IsFiatPair checks to see if the pair is a fiar pair. For example. EURUSD
 func IsFiatPair(p pair.CurrencyPair) bool {
-	return IsFiatCurrency(p.FirstCurrency.String()) && IsFiatCurrency(p.SecondCurrency.String())
+	return IsFiatCurrency(p.FirstCurrency) && IsFiatCurrency(p.SecondCurrency)
 }
 
 // Update updates the local crypto currency or base currency store

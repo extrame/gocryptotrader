@@ -69,7 +69,7 @@ func GetRelatableCryptocurrencies(p pair.CurrencyPair) []pair.CurrencyPair {
 	cryptocurrencies := currency.CryptoCurrencies
 
 	for x := range cryptocurrencies {
-		newPair := pair.NewCurrencyPair(p.FirstCurrency.String(), cryptocurrencies[x])
+		newPair := pair.NewCurrencyPair(p.FirstCurrency, cryptocurrencies[x])
 		if pair.Contains(pairs, newPair) {
 			continue
 		}
@@ -86,7 +86,7 @@ func GetRelatableFiatCurrencies(p pair.CurrencyPair) []pair.CurrencyPair {
 	fiatCurrencies := currency.BaseCurrencies
 
 	for x := range fiatCurrencies {
-		newPair := pair.NewCurrencyPair(p.FirstCurrency.String(), fiatCurrencies[x])
+		newPair := pair.NewCurrencyPair(p.FirstCurrency, fiatCurrencies[x])
 		if pair.Contains(pairs, newPair) {
 			continue
 		}
@@ -106,20 +106,20 @@ func GetRelatableCurrencies(p pair.CurrencyPair, incOrig bool) []pair.CurrencyPa
 
 	first, err := translation.GetTranslation(p.FirstCurrency)
 	if err == nil {
-		pairs = append(pairs, pair.NewCurrencyPair(first.String(),
-			p.SecondCurrency.String()))
+		pairs = append(pairs, pair.NewCurrencyPair(first,
+			p.SecondCurrency))
 
 		second, err := translation.GetTranslation(p.SecondCurrency)
 		if err == nil {
-			pairs = append(pairs, pair.NewCurrencyPair(first.String(),
-				second.String()))
+			pairs = append(pairs, pair.NewCurrencyPair(first,
+				second))
 		}
 	}
 
 	second, err := translation.GetTranslation(p.SecondCurrency)
 	if err == nil {
-		pairs = append(pairs, pair.NewCurrencyPair(p.FirstCurrency.String(),
-			second.String()))
+		pairs = append(pairs, pair.NewCurrencyPair(p.FirstCurrency,
+			second))
 	}
 	return pairs
 }
@@ -145,7 +145,7 @@ func GetSpecificOrderbook(currency, exchangeName, assetType string) (orderbook.B
 
 // GetSpecificTicker returns a specific ticker given the currency,
 // exchangeName and assetType
-func GetSpecificTicker(currency, exchangeName, assetType string) (ticker.Price, error) {
+func GetSpecificTicker(currency, exchangeName, assetType string) (*ticker.Price, error) {
 	var specificTicker ticker.Price
 	var err error
 	for x := range bot.exchanges {
@@ -159,7 +159,7 @@ func GetSpecificTicker(currency, exchangeName, assetType string) (ticker.Price, 
 			}
 		}
 	}
-	return specificTicker, err
+	return &specificTicker, err
 }
 
 // GetCollatedExchangeAccountInfoByCoin collates individual exchange account

@@ -80,25 +80,25 @@ func (h *HUOBI) Run() {
 // UpdateTicker updates and returns the ticker for a currency pair
 func (h *HUOBI) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
 	var tickerPrice ticker.Price
-	tick, err := h.GetMarketDetailMerged(exchange.FormatExchangeCurrency(h.Name, p).String())
+	tick, err := h.GetMarketDetailMerged(exchange.FormatExchangeCurrency(h.Name, p))
 	if err != nil {
 		return tickerPrice, err
 	}
 
-	tickerPrice.Pair = p
+	tickerPrice.Pair = &p
 	tickerPrice.Low = tick.Low
 	tickerPrice.Last = tick.Close
 	tickerPrice.Volume = tick.Volume
 	tickerPrice.High = tick.High
 	tickerPrice.Ask = tick.Ask[0]
 	tickerPrice.Bid = tick.Bid[0]
-	ticker.ProcessTicker(h.GetName(), p, tickerPrice, assetType)
-	return ticker.GetTicker(h.Name, p, assetType)
+	ticker.ProcessTicker(h.GetName(), &p, tickerPrice, assetType)
+	return ticker.GetTicker(h.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (h *HUOBI) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tickerNew, err := ticker.GetTicker(h.GetName(), p, assetType)
+	tickerNew, err := ticker.GetTicker(h.GetName(), &p, assetType)
 	if err != nil {
 		return h.UpdateTicker(p, assetType)
 	}
@@ -117,7 +117,7 @@ func (h *HUOBI) GetOrderbookEx(p pair.CurrencyPair, assetType string) (orderbook
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (h *HUOBI) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	orderbookNew, err := h.GetDepth(exchange.FormatExchangeCurrency(h.Name, p).String(), "step1")
+	orderbookNew, err := h.GetDepth(exchange.FormatExchangeCurrency(h.Name, p), "step1")
 	if err != nil {
 		return orderBook, err
 	}

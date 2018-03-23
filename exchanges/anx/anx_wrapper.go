@@ -27,12 +27,12 @@ func (a *ANX) Run() {
 // UpdateTicker updates and returns the ticker for a currency pair
 func (a *ANX) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
 	var tickerPrice ticker.Price
-	tick, err := a.GetTicker(exchange.FormatExchangeCurrency(a.GetName(), p).String())
+	tick, err := a.GetTicker(exchange.FormatExchangeCurrency(a.GetName(), p))
 	if err != nil {
 		return tickerPrice, err
 	}
 
-	tickerPrice.Pair = p
+	tickerPrice.Pair = &p
 
 	if tick.Data.Sell.Value != "" {
 		tickerPrice.Ask, err = strconv.ParseFloat(tick.Data.Sell.Value, 64)
@@ -87,13 +87,13 @@ func (a *ANX) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Price,
 	} else {
 		tickerPrice.High = 0
 	}
-	ticker.ProcessTicker(a.GetName(), p, tickerPrice, assetType)
-	return ticker.GetTicker(a.Name, p, assetType)
+	ticker.ProcessTicker(a.GetName(), &p, tickerPrice, assetType)
+	return ticker.GetTicker(a.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (a *ANX) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tickerNew, err := ticker.GetTicker(a.GetName(), p, assetType)
+	tickerNew, err := ticker.GetTicker(a.GetName(), &p, assetType)
 	if err != nil {
 		return a.UpdateTicker(p, assetType)
 	}
@@ -112,7 +112,7 @@ func (a *ANX) GetOrderbookEx(p pair.CurrencyPair, assetType string) (orderbook.B
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (a *ANX) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	orderbookNew, err := a.GetDepth(exchange.FormatExchangeCurrency(a.GetName(), p).String())
+	orderbookNew, err := a.GetDepth(exchange.FormatExchangeCurrency(a.GetName(), p))
 	if err != nil {
 		return orderBook, err
 	}

@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package ticker;
+
+import "github.com/extrame/gocryptotrader/currency/pair/pair.proto";
+
+option go_package="github.com/extrame/gocryptotrader/exchanges/ticker";
+
+message Price {
+    pair.CurrencyPair Pair = 1;
+    string CurrencyPair = 2;
+    double Last = 3;
+    double High = 4;
+    double Low = 5;
+    double Bid = 6;
+    double Ask = 7;
+    double Volume = 8;
+    double PriceATH = 9;
+ }
+

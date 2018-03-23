@@ -72,24 +72,24 @@ func (c *COINUT) GetExchangeAccountInfo() (exchange.AccountInfo, error) {
 // UpdateTicker updates and returns the ticker for a currency pair
 func (c *COINUT) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
 	var tickerPrice ticker.Price
-	tick, err := c.GetInstrumentTicker(c.InstrumentMap[p.Pair().String()])
+	tick, err := c.GetInstrumentTicker(c.InstrumentMap[p.Pair()])
 	if err != nil {
 		return ticker.Price{}, err
 	}
 
-	tickerPrice.Pair = p
+	tickerPrice.Pair = &p
 	tickerPrice.Volume = tick.Volume
 	tickerPrice.Last = tick.Last
 	tickerPrice.High = tick.HighestBuy
 	tickerPrice.Low = tick.LowestSell
-	ticker.ProcessTicker(c.GetName(), p, tickerPrice, assetType)
-	return ticker.GetTicker(c.Name, p, assetType)
+	ticker.ProcessTicker(c.GetName(), &p, tickerPrice, assetType)
+	return ticker.GetTicker(c.Name, &p, assetType)
 
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (c *COINUT) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tickerNew, err := ticker.GetTicker(c.GetName(), p, assetType)
+	tickerNew, err := ticker.GetTicker(c.GetName(), &p, assetType)
 	if err != nil {
 		return c.UpdateTicker(p, assetType)
 	}
@@ -108,7 +108,7 @@ func (c *COINUT) GetOrderbookEx(p pair.CurrencyPair, assetType string) (orderboo
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (c *COINUT) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	orderbookNew, err := c.GetInstrumentOrderbook(c.InstrumentMap[p.Pair().String()], 200)
+	orderbookNew, err := c.GetInstrumentOrderbook(c.InstrumentMap[p.Pair()], 200)
 	if err != nil {
 		return orderBook, err
 	}

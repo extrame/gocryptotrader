@@ -9,6 +9,7 @@ import (
 	exchange "github.com/extrame/gocryptotrader/exchanges"
 	"github.com/extrame/gocryptotrader/exchanges/orderbook"
 	"github.com/extrame/gocryptotrader/exchanges/ticker"
+	"github.com/extrame/gocryptotrader/grpc"
 	"github.com/gorilla/mux"
 )
 
@@ -24,10 +25,10 @@ type EnabledExchangeOrderbooks struct {
 	ExchangeValues []orderbook.Base `json:"exchangeValues"`
 }
 
-// AllEnabledExchangeCurrencies holds the enabled exchange currencies
-type AllEnabledExchangeCurrencies struct {
-	Data grpc `json:"data"`
-}
+// // AllEnabledExchangeCurrencies holds the enabled exchange currencies
+// type AllEnabledExchangeCurrencies struct {
+// 	Data []exchange.EnabledExchangeCurrencies `json:"data"`
+// }
 
 // AllEnabledExchangeAccounts holds all enabled accounts info
 type AllEnabledExchangeAccounts struct {
@@ -137,7 +138,7 @@ func GetAllActiveOrderbooks() []EnabledExchangeOrderbooks {
 
 				if err != nil {
 					log.Printf("failed to get %s %s orderbook. Error: %s",
-						currency.Pair().String(),
+						currency.Pair(),
 						exchangeName,
 						err)
 					continue
@@ -197,12 +198,12 @@ func RESTGetTicker(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllActiveTickers returns all enabled exchange tickers
-func GetAllActiveTickers() grpc {
-	var tickerData grpc
+func GetAllActiveTickers() grpc.AllEnabledExchangeCurrencies {
+	var tickerData grpc.AllEnabledExchangeCurrencies
 
 	for _, individualBot := range bot.exchanges {
 		if individualBot != nil && individualBot.IsEnabled() {
-			var individualExchange exchange.EnabledExchangeCurrencies
+			var individualExchange grpc.EnabledExchangeCurrencies
 			exchangeName := individualBot.GetName()
 			individualExchange.ExchangeName = exchangeName
 			currencies := individualBot.GetEnabledCurrencies()
@@ -227,17 +228,17 @@ func GetAllActiveTickers() grpc {
 
 				if err != nil {
 					log.Printf("failed to get %s %s ticker. Error: %s",
-						currency.Pair().String(),
+						currency.Pair(),
 						exchangeName,
 						err)
 					continue
 				}
 
 				individualExchange.ExchangeValues = append(
-					individualExchange.ExchangeValues, tickerPrice,
+					individualExchange.ExchangeValues, &tickerPrice,
 				)
 			}
-			tickerData = append(tickerData, individualExchange)
+			tickerData.ExchangeCurrencies = append(tickerData.ExchangeCurrencies, &individualExchange)
 		}
 	}
 	return tickerData
@@ -245,10 +246,8 @@ func GetAllActiveTickers() grpc {
 
 // RESTGetAllActiveTickers returns all active tickers
 func RESTGetAllActiveTickers(w http.ResponseWriter, r *http.Request) {
-	var response AllEnabledExchangeCurrencies
-	response.Data = GetAllActiveTickers()
 
-	err := RESTfulJSONResponse(w, r, response)
+	err := RESTfulJSONResponse(w, r, GetAllActiveTickers())
 	if err != nil {
 		RESTfulError(r.Method, err)
 	}

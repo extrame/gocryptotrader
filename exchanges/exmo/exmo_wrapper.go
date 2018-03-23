@@ -47,15 +47,15 @@ func (e *EXMO) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Price
 		return tickerPrice, err
 	}
 
-	result, err := e.GetTicker(pairsCollated.String())
+	result, err := e.GetTicker(pairsCollated)
 	if err != nil {
 		return tickerPrice, err
 	}
 
 	for _, x := range e.GetEnabledCurrencies() {
-		currency := exchange.FormatExchangeCurrency(e.Name, x).String()
+		currency := exchange.FormatExchangeCurrency(e.Name, x)
 		var tickerPrice ticker.Price
-		tickerPrice.Pair = x
+		tickerPrice.Pair = &x
 		tickerPrice.Last = result[currency].Last
 		tickerPrice.Ask = result[currency].Sell
 		tickerPrice.High = result[currency].High
@@ -63,14 +63,14 @@ func (e *EXMO) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Price
 		tickerPrice.Last = result[currency].Last
 		tickerPrice.Low = result[currency].Low
 		tickerPrice.Volume = result[currency].Volume
-		ticker.ProcessTicker(e.Name, x, tickerPrice, assetType)
+		ticker.ProcessTicker(e.Name, &x, tickerPrice, assetType)
 	}
-	return ticker.GetTicker(e.Name, p, assetType)
+	return ticker.GetTicker(e.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (e *EXMO) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tick, err := ticker.GetTicker(e.GetName(), p, assetType)
+	tick, err := ticker.GetTicker(e.GetName(), &p, assetType)
 	if err != nil {
 		return e.UpdateTicker(p, assetType)
 	}
@@ -94,14 +94,14 @@ func (e *EXMO) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook
 		return orderBook, err
 	}
 
-	result, err := e.GetOrderbook(pairsCollated.String())
+	result, err := e.GetOrderbook(pairsCollated)
 	if err != nil {
 		return orderBook, err
 	}
 
 	for _, x := range e.GetEnabledCurrencies() {
 		currency := exchange.FormatExchangeCurrency(e.Name, x)
-		data, ok := result[currency.String()]
+		data, ok := result[currency]
 		if !ok {
 			continue
 		}

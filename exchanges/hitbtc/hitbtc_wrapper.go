@@ -66,22 +66,22 @@ func (h *HitBTC) UpdateTicker(currencyPair pair.CurrencyPair, assetType string) 
 
 	for _, x := range h.GetEnabledCurrencies() {
 		var tp ticker.Price
-		curr := exchange.FormatExchangeCurrency(h.GetName(), x).String()
-		tp.Pair = x
+		curr := exchange.FormatExchangeCurrency(h.GetName(), x)
+		tp.Pair = &x
 		tp.Ask = tick[curr].Ask
 		tp.Bid = tick[curr].Bid
 		tp.High = tick[curr].High
 		tp.Last = tick[curr].Last
 		tp.Low = tick[curr].Low
 		tp.Volume = tick[curr].Volume
-		ticker.ProcessTicker(h.GetName(), x, tp, assetType)
+		ticker.ProcessTicker(h.GetName(), &x, tp, assetType)
 	}
-	return ticker.GetTicker(h.Name, currencyPair, assetType)
+	return ticker.GetTicker(h.Name, &currencyPair, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (h *HitBTC) GetTickerPrice(currencyPair pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tickerNew, err := ticker.GetTicker(h.GetName(), currencyPair, assetType)
+	tickerNew, err := ticker.GetTicker(h.GetName(), &currencyPair, assetType)
 	if err != nil {
 		return h.UpdateTicker(currencyPair, assetType)
 	}
@@ -100,7 +100,7 @@ func (h *HitBTC) GetOrderbookEx(currencyPair pair.CurrencyPair, assetType string
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (h *HitBTC) UpdateOrderbook(currencyPair pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	orderbookNew, err := h.GetOrderbook(exchange.FormatExchangeCurrency(h.GetName(), currencyPair).String(), 1000)
+	orderbookNew, err := h.GetOrderbook(exchange.FormatExchangeCurrency(h.GetName(), currencyPair), 1000)
 	if err != nil {
 		return orderBook, err
 	}

@@ -65,24 +65,24 @@ func (b *BTCC) Run() {
 // UpdateTicker updates and returns the ticker for a currency pair
 func (b *BTCC) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
 	var tickerPrice ticker.Price
-	tick, err := b.GetTicker(exchange.FormatExchangeCurrency(b.GetName(), p).String())
+	tick, err := b.GetTicker(exchange.FormatExchangeCurrency(b.GetName(), p))
 	if err != nil {
 		return tickerPrice, err
 	}
-	tickerPrice.Pair = p
+	tickerPrice.Pair = &p
 	tickerPrice.Ask = tick.AskPrice
 	tickerPrice.Bid = tick.BidPrice
 	tickerPrice.Low = tick.Low
 	tickerPrice.Last = tick.Last
 	tickerPrice.Volume = tick.Volume24H
 	tickerPrice.High = tick.High
-	ticker.ProcessTicker(b.GetName(), p, tickerPrice, assetType)
-	return ticker.GetTicker(b.Name, p, assetType)
+	ticker.ProcessTicker(b.GetName(), &p, tickerPrice, assetType)
+	return ticker.GetTicker(b.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (b *BTCC) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tickerNew, err := ticker.GetTicker(b.GetName(), p, assetType)
+	tickerNew, err := ticker.GetTicker(b.GetName(), &p, assetType)
 	if err != nil {
 		return b.UpdateTicker(p, assetType)
 	}
@@ -101,7 +101,7 @@ func (b *BTCC) GetOrderbookEx(p pair.CurrencyPair, assetType string) (orderbook.
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (b *BTCC) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	orderbookNew, err := b.GetOrderBook(exchange.FormatExchangeCurrency(b.GetName(), p).String(), 100)
+	orderbookNew, err := b.GetOrderBook(exchange.FormatExchangeCurrency(b.GetName(), p), 100)
 	if err != nil {
 		return orderBook, err
 	}

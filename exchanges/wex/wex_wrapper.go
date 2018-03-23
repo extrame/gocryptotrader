@@ -33,29 +33,29 @@ func (w *WEX) UpdateTicker(p pair.CurrencyPair, assetType string) (ticker.Price,
 		return tickerPrice, err
 	}
 
-	result, err := w.GetTicker(pairsCollated.String())
+	result, err := w.GetTicker(pairsCollated)
 	if err != nil {
 		return tickerPrice, err
 	}
 
 	for _, x := range w.GetEnabledCurrencies() {
-		currency := exchange.FormatExchangeCurrency(w.Name, x).Lower().String()
+		currency := pair.LowerCurrencyItem(exchange.FormatExchangeCurrency(w.Name, x))
 		var tp ticker.Price
-		tp.Pair = x
+		tp.Pair = &x
 		tp.Last = result[currency].Last
 		tp.Ask = result[currency].Sell
 		tp.Bid = result[currency].Buy
 		tp.Last = result[currency].Last
 		tp.Low = result[currency].Low
 		tp.Volume = result[currency].VolumeCurrent
-		ticker.ProcessTicker(w.Name, x, tp, assetType)
+		ticker.ProcessTicker(w.Name, &x, tp, assetType)
 	}
-	return ticker.GetTicker(w.Name, p, assetType)
+	return ticker.GetTicker(w.Name, &p, assetType)
 }
 
 // GetTickerPrice returns the ticker for a currency pair
 func (w *WEX) GetTickerPrice(p pair.CurrencyPair, assetType string) (ticker.Price, error) {
-	tick, err := ticker.GetTicker(w.GetName(), p, assetType)
+	tick, err := ticker.GetTicker(w.GetName(), &p, assetType)
 	if err != nil {
 		return w.UpdateTicker(p, assetType)
 	}
@@ -74,7 +74,7 @@ func (w *WEX) GetOrderbookEx(p pair.CurrencyPair, assetType string) (orderbook.B
 // UpdateOrderbook updates and returns the orderbook for a currency pair
 func (w *WEX) UpdateOrderbook(p pair.CurrencyPair, assetType string) (orderbook.Base, error) {
 	var orderBook orderbook.Base
-	orderbookNew, err := w.GetDepth(exchange.FormatExchangeCurrency(w.Name, p).String())
+	orderbookNew, err := w.GetDepth(exchange.FormatExchangeCurrency(w.Name, p))
 	if err != nil {
 		return orderBook, err
 	}

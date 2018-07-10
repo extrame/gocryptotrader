@@ -46,4 +46,15 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Println("Got tickers!", curres)
+
+	log.Println("Getting ticker..")
+	curr, err := client.GetTicker(context.Background(), &ig.SpecificTicker{
+		Currency:     "ETHBTC",
+		ExchangeName: "Bitfinex",
+		AssetType:    "SPOT",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Got tickers!", curr)
 }

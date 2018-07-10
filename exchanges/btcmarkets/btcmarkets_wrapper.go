@@ -3,6 +3,7 @@ package btcmarkets
 import (
 	"errors"
 	"log"
+	"sync"
 
 	"github.com/thrasher-/gocryptotrader/common"
 
@@ -13,8 +14,12 @@ import (
 )
 
 // Start starts the BTC Markets go routine
-func (b *BTCMarkets) Start() {
-	go b.Run()
+func (b *BTCMarkets) Start(wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		b.Run()
+		wg.Done()
+	}()
 }
 
 // Run implements the BTC Markets wrapper
@@ -37,13 +42,13 @@ func (b *BTCMarkets) Run() {
 
 		log.Println("BTCMarkets: Upgrading available and enabled pairs")
 
-		err := b.UpdateEnabledCurrencies(enabledPairs, true)
+		err := b.UpdateCurrencies(enabledPairs, true, true)
 		if err != nil {
 			log.Printf("%s Failed to get config.\n", b.GetName())
 			return
 		}
 
-		err = b.UpdateAvailableCurrencies(availablePairs, true)
+		err = b.UpdateCurrencies(availablePairs, false, true)
 		if err != nil {
 			log.Printf("%s Failed to get config.\n", b.GetName())
 			return
@@ -133,4 +138,40 @@ func (b *BTCMarkets) GetExchangeHistory(p pair.CurrencyPair, assetType string) (
 	var resp []exchange.TradeHistory
 
 	return resp, errors.New("trade history not yet implemented")
+}
+
+// SubmitExchangeOrder submits a new order
+func (b *BTCMarkets) SubmitExchangeOrder(p pair.CurrencyPair, side string, orderType int, amount, price float64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// ModifyExchangeOrder will allow of changing orderbook placement and limit to
+// market conversion
+func (b *BTCMarkets) ModifyExchangeOrder(p pair.CurrencyPair, orderID, action int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelExchangeOrder cancels an order by its corresponding ID number
+func (b *BTCMarkets) CancelExchangeOrder(p pair.CurrencyPair, orderID int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelAllExchangeOrders cancels all orders associated with a currency pair
+func (b *BTCMarkets) CancelAllExchangeOrders(p pair.CurrencyPair) error {
+	return errors.New("not yet implemented")
+}
+
+// GetExchangeOrderInfo returns information on a current open order
+func (b *BTCMarkets) GetExchangeOrderInfo(orderID int64) (float64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// GetExchangeDepositAddress returns a deposit address for a specified currency
+func (b *BTCMarkets) GetExchangeDepositAddress(p pair.CurrencyPair) (string, error) {
+	return "", errors.New("not yet implemented")
+}
+
+// WithdrawExchangeFunds returns a withdrawal ID when a withdrawal is submitted
+func (b *BTCMarkets) WithdrawExchangeFunds(address string, p pair.CurrencyPair, amount float64) (string, error) {
+	return "", errors.New("not yet implemented")
 }

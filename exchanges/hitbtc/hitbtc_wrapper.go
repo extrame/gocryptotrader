@@ -3,6 +3,7 @@ package hitbtc
 import (
 	"errors"
 	"log"
+	"sync"
 
 	"github.com/thrasher-/gocryptotrader/common"
 	"github.com/thrasher-/gocryptotrader/currency/pair"
@@ -12,8 +13,12 @@ import (
 )
 
 // Start starts the HitBTC go routine
-func (h *HitBTC) Start() {
-	go h.Run()
+func (h *HitBTC) Start(wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		h.Run()
+		wg.Done()
+	}()
 }
 
 // Run implements the HitBTC wrapper
@@ -45,12 +50,12 @@ func (h *HitBTC) Run() {
 			enabledPairs := []string{"BTC-USD"}
 			log.Println("WARNING: Available pairs for HitBTC reset due to config upgrade, please enable the ones you would like again.")
 
-			err = h.UpdateEnabledCurrencies(enabledPairs, true)
+			err = h.UpdateCurrencies(enabledPairs, true, true)
 			if err != nil {
 				log.Printf("%s Failed to update enabled currencies.\n", h.GetName())
 			}
 		}
-		err = h.UpdateAvailableCurrencies(currencies, forceUpgrade)
+		err = h.UpdateCurrencies(currencies, false, forceUpgrade)
 		if err != nil {
 			log.Printf("%s Failed to update available currencies.\n", h.GetName())
 		}
@@ -144,4 +149,40 @@ func (h *HitBTC) GetExchangeHistory(p pair.CurrencyPair, assetType string) ([]ex
 	var resp []exchange.TradeHistory
 
 	return resp, errors.New("trade history not yet implemented")
+}
+
+// SubmitExchangeOrder submits a new order
+func (h *HitBTC) SubmitExchangeOrder(p pair.CurrencyPair, side string, orderType int, amount, price float64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// ModifyExchangeOrder will allow of changing orderbook placement and limit to
+// market conversion
+func (h *HitBTC) ModifyExchangeOrder(p pair.CurrencyPair, orderID, action int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelExchangeOrder cancels an order by its corresponding ID number
+func (h *HitBTC) CancelExchangeOrder(p pair.CurrencyPair, orderID int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelAllExchangeOrders cancels all orders associated with a currency pair
+func (h *HitBTC) CancelAllExchangeOrders(p pair.CurrencyPair) error {
+	return errors.New("not yet implemented")
+}
+
+// GetExchangeOrderInfo returns information on a current open order
+func (h *HitBTC) GetExchangeOrderInfo(orderID int64) (float64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// GetExchangeDepositAddress returns a deposit address for a specified currency
+func (h *HitBTC) GetExchangeDepositAddress(p pair.CurrencyPair) (string, error) {
+	return "", errors.New("not yet implemented")
+}
+
+// WithdrawExchangeFunds returns a withdrawal ID when a withdrawal is submitted
+func (h *HitBTC) WithdrawExchangeFunds(address string, p pair.CurrencyPair, amount float64) (string, error) {
+	return "", errors.New("not yet implemented")
 }

@@ -21,11 +21,6 @@ type KlineItem struct {
 	Count  int     `json:"count"`
 }
 
-// Klines stores tan array of kline items
-type Klines struct {
-	Klines []KlineItem `json:"data"`
-}
-
 // DetailMerged stores the ticker detail merged data
 type DetailMerged struct {
 	Detail
@@ -64,7 +59,7 @@ type Detail struct {
 	Open      float64 `json:"open"`
 	Close     float64 `json:"close"`
 	High      float64 `json:"high"`
-	Timestamp int64   `json:"id"`
+	Timestamp int64   `json:"timestamp"`
 	ID        int     `json:"id"`
 	Count     int     `json:"count"`
 	Low       float64 `json:"low"`
@@ -88,8 +83,16 @@ type Account struct {
 	UserID int64  `json:"user-id"`
 }
 
-// AccountBalance stores the user account balance
+// AccountBalance stores the user all account balance
 type AccountBalance struct {
+	ID                    int64                  `json:"id"`
+	Type                  string                 `json:"type"`
+	State                 string                 `json:"state"`
+	AccountBalanceDetails []AccountBalanceDetail `json:"list"`
+}
+
+// AccountBalanceDetail stores the user account balance
+type AccountBalanceDetail struct {
 	Currency string  `json:"currency"`
 	Type     string  `json:"type"`
 	Balance  float64 `json:"balance,string"`

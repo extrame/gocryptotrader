@@ -3,6 +3,7 @@ package gdax
 import (
 	"errors"
 	"log"
+	"sync"
 
 	"github.com/thrasher-/gocryptotrader/common"
 	"github.com/thrasher-/gocryptotrader/currency/pair"
@@ -12,8 +13,12 @@ import (
 )
 
 // Start starts the GDAX go routine
-func (g *GDAX) Start() {
-	go g.Run()
+func (g *GDAX) Start(wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		g.Run()
+		wg.Done()
+	}()
 }
 
 // Run implements the GDAX wrapper
@@ -38,9 +43,9 @@ func (g *GDAX) Run() {
 				currencies = append(currencies, x.ID[0:3]+x.ID[4:])
 			}
 		}
-		err = g.UpdateAvailableCurrencies(currencies, false)
+		err = g.UpdateCurrencies(currencies, false, false)
 		if err != nil {
-			log.Printf("%s Failed to get config.\n", g.GetName())
+			log.Printf("%s Failed to update available currencies.\n", g.GetName())
 		}
 	}
 }
@@ -133,4 +138,40 @@ func (g *GDAX) GetExchangeHistory(p pair.CurrencyPair, assetType string) ([]exch
 	var resp []exchange.TradeHistory
 
 	return resp, errors.New("trade history not yet implemented")
+}
+
+// SubmitExchangeOrder submits a new order
+func (g *GDAX) SubmitExchangeOrder(p pair.CurrencyPair, side string, orderType int, amount, price float64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// ModifyExchangeOrder will allow of changing orderbook placement and limit to
+// market conversion
+func (g *GDAX) ModifyExchangeOrder(p pair.CurrencyPair, orderID, action int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelExchangeOrder cancels an order by its corresponding ID number
+func (g *GDAX) CancelExchangeOrder(p pair.CurrencyPair, orderID int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelAllExchangeOrders cancels all orders associated with a currency pair
+func (g *GDAX) CancelAllExchangeOrders(p pair.CurrencyPair) error {
+	return errors.New("not yet implemented")
+}
+
+// GetExchangeOrderInfo returns information on a current open order
+func (g *GDAX) GetExchangeOrderInfo(orderID int64) (float64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// GetExchangeDepositAddress returns a deposit address for a specified currency
+func (g *GDAX) GetExchangeDepositAddress(p pair.CurrencyPair) (string, error) {
+	return "", errors.New("not yet implemented")
+}
+
+// WithdrawExchangeFunds returns a withdrawal ID when a withdrawal is submitted
+func (g *GDAX) WithdrawExchangeFunds(address string, p pair.CurrencyPair, amount float64) (string, error) {
+	return "", errors.New("not yet implemented")
 }

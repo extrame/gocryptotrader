@@ -3,6 +3,7 @@ package wex
 import (
 	"errors"
 	"log"
+	"sync"
 
 	"github.com/thrasher-/gocryptotrader/common"
 	"github.com/thrasher-/gocryptotrader/currency/pair"
@@ -12,8 +13,12 @@ import (
 )
 
 // Start starts the WEX go routine
-func (w *WEX) Start() {
-	go w.Run()
+func (w *WEX) Start(wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		w.Run()
+		wg.Done()
+	}()
 }
 
 // Run implements the WEX wrapper
@@ -22,6 +27,30 @@ func (w *WEX) Run() {
 		log.Printf("%s Websocket: %s.", w.GetName(), common.IsEnabled(w.Websocket))
 		log.Printf("%s polling delay: %ds.\n", w.GetName(), w.RESTPollingDelay)
 		log.Printf("%s %d currencies enabled: %s.\n", w.GetName(), len(w.EnabledPairs), w.EnabledPairs)
+	}
+
+	exchangeProducts, err := w.GetTradablePairs()
+	if err != nil {
+		log.Printf("%s Failed to get available symbols.\n", w.GetName())
+	} else {
+		forceUpgrade := false
+		if !common.StringDataContains(w.EnabledPairs, "_") || !common.StringDataContains(w.AvailablePairs, "_") {
+			forceUpgrade = true
+		}
+
+		if forceUpgrade {
+			enabledPairs := []string{"BTC_USD", "LTC_USD", "LTC_BTC", "ETH_USD"}
+			log.Println("WARNING: Enabled pairs for WEX reset due to config upgrade, please enable the ones you would like again.")
+
+			err = w.UpdateCurrencies(enabledPairs, true, true)
+			if err != nil {
+				log.Printf("%s Failed to get config.\n", w.GetName())
+			}
+		}
+		err = w.UpdateCurrencies(exchangeProducts, false, forceUpgrade)
+		if err != nil {
+			log.Printf("%s Failed to get config.\n", w.GetName())
+		}
 	}
 }
 
@@ -119,4 +148,40 @@ func (w *WEX) GetExchangeHistory(p pair.CurrencyPair, assetType string) ([]excha
 	var resp []exchange.TradeHistory
 
 	return resp, errors.New("trade history not yet implemented")
+}
+
+// SubmitExchangeOrder submits a new order
+func (w *WEX) SubmitExchangeOrder(p pair.CurrencyPair, side string, orderType int, amount, price float64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// ModifyExchangeOrder will allow of changing orderbook placement and limit to
+// market conversion
+func (w *WEX) ModifyExchangeOrder(p pair.CurrencyPair, orderID, action int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelExchangeOrder cancels an order by its corresponding ID number
+func (w *WEX) CancelExchangeOrder(p pair.CurrencyPair, orderID int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelAllExchangeOrders cancels all orders associated with a currency pair
+func (w *WEX) CancelAllExchangeOrders(p pair.CurrencyPair) error {
+	return errors.New("not yet implemented")
+}
+
+// GetExchangeOrderInfo returns information on a current open order
+func (w *WEX) GetExchangeOrderInfo(orderID int64) (float64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// GetExchangeDepositAddress returns a deposit address for a specified currency
+func (w *WEX) GetExchangeDepositAddress(p pair.CurrencyPair) (string, error) {
+	return "", errors.New("not yet implemented")
+}
+
+// WithdrawExchangeFunds returns a withdrawal ID when a withdrawal is submitted
+func (w *WEX) WithdrawExchangeFunds(address string, p pair.CurrencyPair, amount float64) (string, error) {
+	return "", errors.New("not yet implemented")
 }

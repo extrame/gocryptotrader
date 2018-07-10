@@ -19,7 +19,7 @@ func TestSupportsPair(t *testing.T) {
 	_, err = cfg.SupportsPair("asdf", pair.NewCurrencyPair("BTC", "USD"))
 	if err == nil {
 		t.Error(
-			"Test failed. TestSupportsPair. Non-existant exchange returned nil error",
+			"Test failed. TestSupportsPair. Non-existent exchange returned nil error",
 		)
 	}
 
@@ -43,7 +43,7 @@ func TestGetAvailablePairs(t *testing.T) {
 	_, err = cfg.GetAvailablePairs("asdf")
 	if err == nil {
 		t.Error(
-			"Test failed. TestGetAvailablePairs. Non-existant exchange returned nil error",
+			"Test failed. TestGetAvailablePairs. Non-existent exchange returned nil error",
 		)
 	}
 
@@ -67,7 +67,7 @@ func TestGetEnabledPairs(t *testing.T) {
 	_, err = cfg.GetEnabledPairs("asdf")
 	if err == nil {
 		t.Error(
-			"Test failed. TestGetEnabledPairs. Non-existant exchange returned nil error",
+			"Test failed. TestGetEnabledPairs. Non-existent exchange returned nil error",
 		)
 	}
 
@@ -166,7 +166,7 @@ func TestGetConfigCurrencyPairFormat(t *testing.T) {
 	_, err = cfg.GetConfigCurrencyPairFormat("asdasdasd")
 	if err == nil {
 		t.Errorf(
-			"Test failed. TestGetRequestCurrencyPairFormat. Non-existant exchange returned nil error",
+			"Test failed. TestGetRequestCurrencyPairFormat. Non-existent exchange returned nil error",
 		)
 	}
 
@@ -190,7 +190,7 @@ func TestGetRequestCurrencyPairFormat(t *testing.T) {
 	_, err = cfg.GetRequestCurrencyPairFormat("asdasdasd")
 	if err == nil {
 		t.Errorf(
-			"Test failed. TestGetRequestCurrencyPairFormat. Non-existant exchange returned nil error",
+			"Test failed. TestGetRequestCurrencyPairFormat. Non-existent exchange returned nil error",
 		)
 	}
 
@@ -266,47 +266,6 @@ func TestUpdateExchangeConfig(t *testing.T) {
 	}
 }
 
-func TestCheckSMSGlobalConfigValues(t *testing.T) {
-	t.Parallel()
-
-	checkSMSGlobalConfigValues := GetConfig()
-	err := checkSMSGlobalConfigValues.LoadConfig(ConfigTestFile)
-	if err != nil {
-		t.Errorf("Test failed. checkSMSGlobalConfigValues.LoadConfig: %s", err)
-	}
-	err = checkSMSGlobalConfigValues.CheckSMSGlobalConfigValues()
-	if err != nil {
-		t.Error(
-			`Test failed. checkSMSGlobalConfigValues.CheckSMSGlobalConfigValues: Incorrect Return Value`,
-		)
-	}
-
-	checkSMSGlobalConfigValues.SMS.Username = "Username"
-	err = checkSMSGlobalConfigValues.CheckSMSGlobalConfigValues()
-	if err == nil {
-		t.Error(
-			"Test failed. checkSMSGlobalConfigValues.CheckSMSGlobalConfigValues: Incorrect Return Value",
-		)
-	}
-
-	checkSMSGlobalConfigValues.SMS.Username = "1234"
-	checkSMSGlobalConfigValues.SMS.Contacts[0].Name = "Bob"
-	checkSMSGlobalConfigValues.SMS.Contacts[0].Number = "12345"
-	err = checkSMSGlobalConfigValues.CheckSMSGlobalConfigValues()
-	if err == nil {
-		t.Error(
-			"Test failed. checkSMSGlobalConfigValues.CheckSMSGlobalConfigValues: Incorrect Return Value",
-		)
-	}
-	checkSMSGlobalConfigValues.SMS.Contacts = checkSMSGlobalConfigValues.SMS.Contacts[:0]
-	err = checkSMSGlobalConfigValues.CheckSMSGlobalConfigValues()
-	if err == nil {
-		t.Error(
-			"Test failed. checkSMSGlobalConfigValues.CheckSMSGlobalConfigValues: Incorrect Return Value",
-		)
-	}
-}
-
 func TestCheckExchangeConfigValues(t *testing.T) {
 	t.Parallel()
 	checkExchangeConfigValues := Config{}
@@ -323,6 +282,12 @@ func TestCheckExchangeConfigValues(t *testing.T) {
 			"Test failed. checkExchangeConfigValues.CheckExchangeConfigValues: %s",
 			err.Error(),
 		)
+	}
+
+	checkExchangeConfigValues.Exchanges[0].HTTPTimeout = 0
+	checkExchangeConfigValues.CheckExchangeConfigValues()
+	if checkExchangeConfigValues.Exchanges[0].HTTPTimeout == 0 {
+		t.Fatalf("Test failed. Expected exchange %s to have updated HTTPTimeout value", checkExchangeConfigValues.Exchanges[0].Name)
 	}
 
 	checkExchangeConfigValues.Exchanges[0].APIKey = "Key"
@@ -423,6 +388,14 @@ func TestCheckWebserverConfigValues(t *testing.T) {
 	}
 
 	if checkWebserverConfigValues.Webserver.WebsocketConnectionLimit != 1 {
+		t.Error(
+			"Test failed. checkWebserverConfigValues.CheckWebserverConfigValues error",
+		)
+	}
+
+	checkWebserverConfigValues.Webserver.WebsocketMaxAuthFailures = -1
+	checkWebserverConfigValues.CheckWebserverConfigValues()
+	if checkWebserverConfigValues.Webserver.WebsocketMaxAuthFailures != 3 {
 		t.Error(
 			"Test failed. checkWebserverConfigValues.CheckWebserverConfigValues error",
 		)
@@ -531,14 +504,55 @@ func TestSaveConfig(t *testing.T) {
 
 func TestGetFilePath(t *testing.T) {
 	expected := "blah.json"
-	result := GetFilePath("blah.json")
+	result, _ := GetFilePath("blah.json")
 	if result != "blah.json" {
 		t.Errorf("Test failed. TestGetFilePath: expected %s got %s", expected, result)
 	}
 
 	expected = ConfigTestFile
-	result = GetFilePath("")
+	result, _ = GetFilePath("")
 	if result != expected {
 		t.Errorf("Test failed. TestGetFilePath: expected %s got %s", expected, result)
+	}
+
+	testBypass = true
+	result, _ = GetFilePath("")
+}
+
+func TestCheckConfig(t *testing.T) {
+	var c Config
+	err := c.LoadConfig(ConfigTestFile)
+	if err != nil {
+		t.Errorf("Test failed. %s", err)
+	}
+
+	err = c.CheckConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestUpdateConfig(t *testing.T) {
+	var c Config
+	err := c.LoadConfig(ConfigTestFile)
+	if err != nil {
+		t.Errorf("Test failed. %s", err)
+	}
+
+	newCfg := c
+	err = c.UpdateConfig("", newCfg)
+	if err != nil {
+		t.Fatalf("Test failed. %s", err)
+	}
+
+	err = c.UpdateConfig("//non-existantpath\\", newCfg)
+	if err == nil {
+		t.Fatalf("Test failed. Error should of been thrown for invalid path")
+	}
+
+	newCfg.Currency.Cryptocurrencies = ""
+	err = c.UpdateConfig("", newCfg)
+	if len(c.Currency.Cryptocurrencies) == 0 {
+		t.Fatalf("Test failed. Cryptocurrencies should have been repopulated")
 	}
 }

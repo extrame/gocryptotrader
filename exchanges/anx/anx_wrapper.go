@@ -4,7 +4,9 @@ import (
 	"errors"
 	"log"
 	"strconv"
+	"sync"
 
+	"github.com/thrasher-/gocryptotrader/common"
 	"github.com/thrasher-/gocryptotrader/currency/pair"
 	"github.com/thrasher-/gocryptotrader/exchanges"
 	"github.com/thrasher-/gocryptotrader/exchanges/orderbook"
@@ -12,8 +14,12 @@ import (
 )
 
 // Start starts the ANX go routine
-func (a *ANX) Start() {
-	go a.Run()
+func (a *ANX) Start(wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		a.Run()
+		wg.Done()
+	}()
 }
 
 // Run implements the ANX wrapper
@@ -22,6 +28,45 @@ func (a *ANX) Run() {
 		log.Printf("%s polling delay: %ds.\n", a.GetName(), a.RESTPollingDelay)
 		log.Printf("%s %d currencies enabled: %s.\n", a.GetName(), len(a.EnabledPairs), a.EnabledPairs)
 	}
+
+	exchangeProducts, err := a.GetTradablePairs()
+	if err != nil {
+		log.Printf("%s Failed to get available symbols.\n", a.GetName())
+	} else {
+		forceUpgrade := false
+		if !common.StringDataContains(a.EnabledPairs, "_") || !common.StringDataContains(a.AvailablePairs, "_") {
+			forceUpgrade = true
+		}
+
+		if forceUpgrade {
+			enabledPairs := []string{"BTC_USD,BTC_HKD,BTC_EUR,BTC_CAD,BTC_AUD,BTC_SGD,BTC_JPY,BTC_GBP,BTC_NZD,LTC_BTC,DOG_EBTC,STR_BTC,XRP_BTC"}
+			log.Println("WARNING: Enabled pairs for ANX reset due to config upgrade, please enable the ones you would like again.")
+
+			err = a.UpdateCurrencies(enabledPairs, true, true)
+			if err != nil {
+				log.Printf("%s Failed to get config.\n", a.GetName())
+			}
+		}
+		err = a.UpdateCurrencies(exchangeProducts, false, forceUpgrade)
+		if err != nil {
+			log.Printf("%s Failed to get config.\n", a.GetName())
+		}
+	}
+}
+
+// GetTradablePairs returns a list of available
+func (a *ANX) GetTradablePairs() ([]string, error) {
+	result, err := a.GetCurrencies()
+	if err != nil {
+		return nil, err
+	}
+
+	var currencies []string
+	for x := range result.CurrencyPairs {
+		currencies = append(currencies, result.CurrencyPairs[x].TradedCcy+"_"+result.CurrencyPairs[x].SettlementCcy)
+	}
+
+	return currencies, nil
 }
 
 // UpdateTicker updates and returns the ticker for a currency pair
@@ -141,4 +186,40 @@ func (a *ANX) GetExchangeHistory(p pair.CurrencyPair, assetType string) ([]excha
 	var resp []exchange.TradeHistory
 
 	return resp, errors.New("trade history not yet implemented")
+}
+
+// SubmitExchangeOrder submits a new order
+func (a *ANX) SubmitExchangeOrder(p pair.CurrencyPair, side string, orderType int, amount, price float64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// ModifyExchangeOrder will allow of changing orderbook placement and limit to
+// market conversion
+func (a *ANX) ModifyExchangeOrder(p pair.CurrencyPair, orderID, action int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelExchangeOrder cancels an order by its corresponding ID number
+func (a *ANX) CancelExchangeOrder(p pair.CurrencyPair, orderID int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelAllExchangeOrders cancels all orders associated with a currency pair
+func (a *ANX) CancelAllExchangeOrders(p pair.CurrencyPair) error {
+	return errors.New("not yet implemented")
+}
+
+// GetExchangeOrderInfo returns information on a current open order
+func (a *ANX) GetExchangeOrderInfo(orderID int64) (float64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// GetExchangeDepositAddress returns a deposit address for a specified currency
+func (a *ANX) GetExchangeDepositAddress(p pair.CurrencyPair) (string, error) {
+	return "", errors.New("not yet implemented")
+}
+
+// WithdrawExchangeFunds returns a withdrawal ID when a withdrawal is submitted
+func (a *ANX) WithdrawExchangeFunds(address string, p pair.CurrencyPair, amount float64) (string, error) {
+	return "", errors.New("not yet implemented")
 }

@@ -3,6 +3,8 @@ package bitstamp
 import (
 	"errors"
 	"log"
+	"strings"
+	"sync"
 
 	"github.com/thrasher-/gocryptotrader/common"
 	"github.com/thrasher-/gocryptotrader/currency/pair"
@@ -12,8 +14,12 @@ import (
 )
 
 // Start starts the Bitstamp go routine
-func (b *Bitstamp) Start() {
-	go b.Run()
+func (b *Bitstamp) Start(wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		b.Run()
+		wg.Done()
+	}()
 }
 
 // Run implements the Bitstamp wrapper
@@ -26,6 +32,24 @@ func (b *Bitstamp) Run() {
 
 	if b.Websocket {
 		go b.PusherClient()
+	}
+
+	pairs, err := b.GetTradingPairs()
+	if err != nil {
+		log.Printf("%s failed to get trading pairs. Err: %s", b.Name, err)
+	} else {
+		var currencies []string
+		for x := range pairs {
+			if pairs[x].Trading != "Enabled" {
+				continue
+			}
+			pair := strings.Split(pairs[x].Name, "/")
+			currencies = append(currencies, pair[0]+pair[1])
+		}
+		err = b.UpdateCurrencies(currencies, false, false)
+		if err != nil {
+			log.Printf("%s Failed to update available currencies.\n", b.Name)
+		}
 	}
 }
 
@@ -129,4 +153,40 @@ func (b *Bitstamp) GetExchangeHistory(p pair.CurrencyPair, assetType string) ([]
 	var resp []exchange.TradeHistory
 
 	return resp, errors.New("trade history not yet implemented")
+}
+
+// SubmitExchangeOrder submits a new order
+func (b *Bitstamp) SubmitExchangeOrder(p pair.CurrencyPair, side string, orderType int, amount, price float64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// ModifyExchangeOrder will allow of changing orderbook placement and limit to
+// market conversion
+func (b *Bitstamp) ModifyExchangeOrder(p pair.CurrencyPair, orderID, action int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelExchangeOrder cancels an order by its corresponding ID number
+func (b *Bitstamp) CancelExchangeOrder(p pair.CurrencyPair, orderID int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelAllExchangeOrders cancels all orders associated with a currency pair
+func (b *Bitstamp) CancelAllExchangeOrders(p pair.CurrencyPair) error {
+	return errors.New("not yet implemented")
+}
+
+// GetExchangeOrderInfo returns information on a current open order
+func (b *Bitstamp) GetExchangeOrderInfo(orderID int64) (float64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// GetExchangeDepositAddress returns a deposit address for a specified currency
+func (b *Bitstamp) GetExchangeDepositAddress(p pair.CurrencyPair) (string, error) {
+	return "", errors.New("not yet implemented")
+}
+
+// WithdrawExchangeFunds returns a withdrawal ID when a withdrawal is submitted
+func (b *Bitstamp) WithdrawExchangeFunds(address string, p pair.CurrencyPair, amount float64) (string, error) {
+	return "", errors.New("not yet implemented")
 }

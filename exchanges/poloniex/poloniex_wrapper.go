@@ -3,6 +3,7 @@ package poloniex
 import (
 	"errors"
 	"log"
+	"sync"
 
 	"github.com/extrame/gocryptotrader/common"
 	"github.com/extrame/gocryptotrader/currency/pair"
@@ -12,8 +13,12 @@ import (
 )
 
 // Start starts the Poloniex go routine
-func (po *Poloniex) Start() {
-	go po.Run()
+func (po *Poloniex) Start(wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		po.Run()
+		wg.Done()
+	}()
 }
 
 // Run implements the Poloniex wrapper
@@ -38,7 +43,7 @@ func (po *Poloniex) Run() {
 				po.GetName())
 			forceUpdate = true
 		}
-		err = po.UpdateAvailableCurrencies(exchangeCurrencies, forceUpdate)
+		err = po.UpdateCurrencies(exchangeCurrencies, false, forceUpdate)
 		if err != nil {
 			log.Printf("%s Failed to update available currencies %s.\n", po.GetName(), err)
 		}
@@ -144,4 +149,40 @@ func (po *Poloniex) GetExchangeHistory(p pair.CurrencyPair, assetType string) ([
 	var resp []exchange.TradeHistory
 
 	return resp, errors.New("trade history not yet implemented")
+}
+
+// SubmitExchangeOrder submits a new order
+func (po *Poloniex) SubmitExchangeOrder(p pair.CurrencyPair, side string, orderType int, amount, price float64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// ModifyExchangeOrder will allow of changing orderbook placement and limit to
+// market conversion
+func (po *Poloniex) ModifyExchangeOrder(p pair.CurrencyPair, orderID, action int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelExchangeOrder cancels an order by its corresponding ID number
+func (po *Poloniex) CancelExchangeOrder(p pair.CurrencyPair, orderID int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelAllExchangeOrders cancels all orders associated with a currency pair
+func (po *Poloniex) CancelAllExchangeOrders(p pair.CurrencyPair) error {
+	return errors.New("not yet implemented")
+}
+
+// GetExchangeOrderInfo returns information on a current open order
+func (po *Poloniex) GetExchangeOrderInfo(orderID int64) (float64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// GetExchangeDepositAddress returns a deposit address for a specified currency
+func (po *Poloniex) GetExchangeDepositAddress(p pair.CurrencyPair) (string, error) {
+	return "", errors.New("not yet implemented")
+}
+
+// WithdrawExchangeFunds returns a withdrawal ID when a withdrawal is submitted
+func (po *Poloniex) WithdrawExchangeFunds(address string, p pair.CurrencyPair, amount float64) (string, error) {
+	return "", errors.New("not yet implemented")
 }

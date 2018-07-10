@@ -5,16 +5,20 @@ import (
 	"errors"
 	"log"
 
-	"github.com/thrasher-/gocryptotrader/common"
-	"github.com/thrasher-/gocryptotrader/currency/pair"
-	exchange "github.com/thrasher-/gocryptotrader/exchanges"
-	"github.com/thrasher-/gocryptotrader/exchanges/orderbook"
-	"github.com/thrasher-/gocryptotrader/exchanges/ticker"
+	"github.com/extrame/gocryptotrader/common"
+	"github.com/extrame/gocryptotrader/currency/pair"
+	exchange "github.com/extrame/gocryptotrader/exchanges"
+	"github.com/extrame/gocryptotrader/exchanges/orderbook"
+	"github.com/extrame/gocryptotrader/exchanges/ticker"
 )
 
 // Start starts the {{.CapitalName}} go routine
-func ({{.Variable}} *{{.CapitalName}}) Start() {
-	go {{.Variable}}.Run()
+func ({{.Variable}} *{{.CapitalName}}) Start(wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		{{.Variable}}.Run()
+		wg.Done()
+	}()
 }
 
 // Run implements the {{.CapitalName}} wrapper

@@ -11,6 +11,7 @@ import (
 	"github.com/extrame/gocryptotrader/common"
 	"github.com/extrame/gocryptotrader/config"
 	"github.com/extrame/gocryptotrader/exchanges"
+	"github.com/extrame/gocryptotrader/exchanges/request"
 	"github.com/extrame/gocryptotrader/exchanges/ticker"
 )
 
@@ -38,6 +39,9 @@ const (
 	krakenTradeVolume   = "TradeVolume"
 	krakenOrderCancel   = "CancelOrder"
 	krakenOrderPlace    = "AddOrder"
+
+	krakenAuthRate   = 0
+	krakenUnauthRate = 0
 )
 
 // Kraken is the overarching type across the alphapoint package
@@ -63,6 +67,9 @@ func (k *Kraken) SetDefaults() {
 	k.ConfigCurrencyPairFormat.Delimiter = "-"
 	k.ConfigCurrencyPairFormat.Uppercase = true
 	k.AssetTypes = []string{ticker.Spot}
+	k.SupportsAutoPairUpdating = true
+	k.SupportsRESTTickerBatching = true
+	k.Requester = request.New(k.Name, request.NewRateLimit(time.Second, krakenAuthRate), request.NewRateLimit(time.Second, krakenUnauthRate), common.NewHTTPClientWithTimeout(exchange.DefaultHTTPTimeout))
 }
 
 // Setup sets current exchange configuration
@@ -73,6 +80,7 @@ func (k *Kraken) Setup(exch config.ExchangeConfig) {
 		k.Enabled = true
 		k.AuthenticatedAPISupport = exch.AuthenticatedAPISupport
 		k.SetAPIKeys(exch.APIKey, exch.APISecret, "", false)
+		k.SetHTTPClientTimeout(exch.HTTPTimeout)
 		k.RESTPollingDelay = exch.RESTPollingDelay
 		k.Verbose = exch.Verbose
 		k.Websocket = exch.Websocket
@@ -84,6 +92,10 @@ func (k *Kraken) Setup(exch config.ExchangeConfig) {
 			log.Fatal(err)
 		}
 		err = k.SetAssetTypes()
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = k.SetAutoPairDefaults()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -103,7 +115,7 @@ func (k *Kraken) GetServerTime(unixTime bool) (interface{}, error) {
 	var result GeneralResponse
 	path := fmt.Sprintf("%s/%s/public/%s", krakenAPIURL, krakenAPIVersion, krakenServerTime)
 
-	err := common.SendHTTPGetRequest(path, true, k.Verbose, &result)
+	err := k.SendHTTPRequest(path, &result)
 	if err != nil {
 		return nil, fmt.Errorf("getServerTime() error %s", err)
 	}
@@ -119,7 +131,7 @@ func (k *Kraken) GetAssets() (interface{}, error) {
 	var result GeneralResponse
 	path := fmt.Sprintf("%s/%s/public/%s", krakenAPIURL, krakenAPIVersion, krakenAssets)
 
-	return result.Result, common.SendHTTPGetRequest(path, true, k.Verbose, &result)
+	return result.Result, k.SendHTTPRequest(path, &result)
 }
 
 // GetAssetPairs returns a full asset pair list
@@ -132,7 +144,7 @@ func (k *Kraken) GetAssetPairs() (map[string]AssetPairs, error) {
 	response := Response{}
 	path := fmt.Sprintf("%s/%s/public/%s", krakenAPIURL, krakenAPIVersion, krakenAssetPairs)
 
-	return response.Result, common.SendHTTPGetRequest(path, true, k.Verbose, &response)
+	return response.Result, k.SendHTTPRequest(path, &response)
 }
 
 // GetTicker returns ticker information from kraken
@@ -149,7 +161,7 @@ func (k *Kraken) GetTicker(symbol string) (Ticker, error) {
 	resp := Response{}
 	path := fmt.Sprintf("%s/%s/public/%s?%s", krakenAPIURL, krakenAPIVersion, krakenTicker, values.Encode())
 
-	err := common.SendHTTPGetRequest(path, true, k.Verbose, &resp)
+	err := k.SendHTTPRequest(path, &resp)
 	if err != nil {
 		return ticker, err
 	}
@@ -187,7 +199,7 @@ func (k *Kraken) GetOHLC(symbol string) ([]OpenHighLowClose, error) {
 
 	path := fmt.Sprintf("%s/%s/public/%s?%s", krakenAPIURL, krakenAPIVersion, krakenOHLC, values.Encode())
 
-	err := common.SendHTTPGetRequest(path, true, k.Verbose, &result)
+	err := k.SendHTTPRequest(path, &result)
 	if err != nil {
 		return OHLC, err
 	}
@@ -233,7 +245,7 @@ func (k *Kraken) GetDepth(symbol string) (Orderbook, error) {
 
 	path := fmt.Sprintf("%s/%s/public/%s?%s", krakenAPIURL, krakenAPIVersion, krakenDepth, values.Encode())
 
-	err := common.SendHTTPGetRequest(path, true, k.Verbose, &result)
+	err := k.SendHTTPRequest(path, &result)
 	if err != nil {
 		return orderBook, err
 	}
@@ -292,7 +304,7 @@ func (k *Kraken) GetTrades(symbol string) ([]RecentTrades, error) {
 
 	path := fmt.Sprintf("%s/%s/public/%s?%s", krakenAPIURL, krakenAPIVersion, krakenTrades, values.Encode())
 
-	err := common.SendHTTPGetRequest(path, true, k.Verbose, &result)
+	err := k.SendHTTPRequest(path, &result)
 	if err != nil {
 		return recentTrades, err
 	}
@@ -333,7 +345,7 @@ func (k *Kraken) GetSpread(symbol string) ([]Spread, error) {
 
 	path := fmt.Sprintf("%s/%s/public/%s?%s", krakenAPIURL, krakenAPIVersion, krakenSpread, values.Encode())
 
-	err := common.SendHTTPGetRequest(path, true, k.Verbose, &response)
+	err := k.SendHTTPRequest(path, &response)
 	if err != nil {
 		return peanutButter, err
 	}
@@ -563,6 +575,11 @@ func (k *Kraken) CancelOrder(orderID int64) (interface{}, error) {
 	return k.SendAuthenticatedHTTPRequest(krakenOrderCancel, values)
 }
 
+// SendHTTPRequest sends an unauthenticated HTTP requests
+func (k *Kraken) SendHTTPRequest(path string, result interface{}) error {
+	return k.SendPayload("GET", path, nil, nil, result, false, k.Verbose)
+}
+
 // SendAuthenticatedHTTPRequest sends an authenticated HTTP request
 func (k *Kraken) SendAuthenticatedHTTPRequest(method string, values url.Values) (interface{}, error) {
 	if !k.AuthenticatedAPISupport {
@@ -594,20 +611,11 @@ func (k *Kraken) SendAuthenticatedHTTPRequest(method string, values url.Values) 
 	headers["API-Key"] = k.APIKey
 	headers["API-Sign"] = signature
 
-	rawResp, err := common.SendHTTPRequest("POST", krakenAPIURL+path, headers, strings.NewReader(values.Encode()))
-	if err != nil {
-		return nil, err
-	}
-
-	if k.Verbose {
-		log.Printf("Received raw: \n%s\n", rawResp)
-	}
-
 	var resp interface{}
 
-	err = common.JSONDecode([]byte(rawResp), &resp)
+	err = k.SendPayload("POST", krakenAPIURL+path, headers, strings.NewReader(values.Encode()), &resp, true, k.Verbose)
 	if err != nil {
-		return nil, err
+		return resp, err
 	}
 
 	data := resp.(map[string]interface{})

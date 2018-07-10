@@ -1,5 +1,5 @@
 FROM golang:1.9.4 as build
-WORKDIR /go/src/github.com/thrasher-/gocryptotrader
+WORKDIR /go/src/github.com/extrame/gocryptotrader
 COPY . .
 RUN mv -vn config_example.json config.json \
  && go get -v -d \
@@ -8,6 +8,6 @@ RUN mv -vn config_example.json config.json \
 
 FROM alpine:latest
 COPY --from=build /go/bin/gocryptotrader /app/
-COPY --from=build /go/src/github.com/thrasher-/gocryptotrader/config.json /app/
+COPY --from=build /go/src/github.com/extrame/gocryptotrader/config.json /app/
 EXPOSE 9050
 CMD ["/app/gocryptotrader"]

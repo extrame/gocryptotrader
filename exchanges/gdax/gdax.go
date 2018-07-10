@@ -7,10 +7,12 @@ import (
 	"log"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/extrame/gocryptotrader/common"
 	"github.com/extrame/gocryptotrader/config"
 	"github.com/extrame/gocryptotrader/exchanges"
+	"github.com/extrame/gocryptotrader/exchanges/request"
 	"github.com/extrame/gocryptotrader/exchanges/ticker"
 )
 
@@ -46,9 +48,10 @@ const (
 	gdaxWithdrawalCrypto        = "withdrawals/crypto"
 	gdaxCoinbaseAccounts        = "coinbase-accounts"
 	gdaxTrailingVolume          = "users/self/trailing-volume"
-)
 
-var sometin []string
+	gdaxAuthRate   = 5
+	gdaxUnauthRate = 3
+)
 
 // GDAX is the overarching type across the GDAX package
 type GDAX struct {
@@ -70,6 +73,9 @@ func (g *GDAX) SetDefaults() {
 	g.ConfigCurrencyPairFormat.Uppercase = true
 	g.AssetTypes = []string{ticker.Spot}
 	g.APIUrl = gdaxAPIURL
+	g.SupportsAutoPairUpdating = true
+	g.SupportsRESTTickerBatching = false
+	g.Requester = request.New(g.Name, request.NewRateLimit(time.Second, gdaxAuthRate), request.NewRateLimit(time.Second, gdaxUnauthRate), common.NewHTTPClientWithTimeout(exchange.DefaultHTTPTimeout))
 }
 
 // Setup initialises the exchange parameters with the current configuration
@@ -80,6 +86,7 @@ func (g *GDAX) Setup(exch config.ExchangeConfig) {
 		g.Enabled = true
 		g.AuthenticatedAPISupport = exch.AuthenticatedAPISupport
 		g.SetAPIKeys(exch.APIKey, exch.APISecret, exch.ClientID, true)
+		g.SetHTTPClientTimeout(exch.HTTPTimeout)
 		g.RESTPollingDelay = exch.RESTPollingDelay
 		g.Verbose = exch.Verbose
 		g.Websocket = exch.Websocket
@@ -94,6 +101,10 @@ func (g *GDAX) Setup(exch config.ExchangeConfig) {
 			log.Fatal(err)
 		}
 		err = g.SetAssetTypes()
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = g.SetAutoPairDefaults()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -113,8 +124,7 @@ func (g *GDAX) GetFee(maker bool) float64 {
 func (g *GDAX) GetProducts() ([]Product, error) {
 	products := []Product{}
 
-	return products,
-		common.SendHTTPGetRequest(g.APIUrl+gdaxProducts, true, g.Verbose, &products)
+	return products, g.SendHTTPRequest(g.APIUrl+gdaxProducts, &products)
 }
 
 // GetOrderbook returns orderbook by currency pair and level
@@ -127,7 +137,7 @@ func (g *GDAX) GetOrderbook(symbol string, level int) (interface{}, error) {
 		path = fmt.Sprintf("%s/%s/%s?level=%s", g.APIUrl+gdaxProducts, symbol, gdaxOrderbook, levelStr)
 	}
 
-	if err := common.SendHTTPGetRequest(path, true, g.Verbose, &orderbook); err != nil {
+	if err := g.SendHTTPRequest(path, &orderbook); err != nil {
 		return nil, err
 	}
 
@@ -196,7 +206,7 @@ func (g *GDAX) GetTicker(currencyPair string) (Ticker, error) {
 	path := fmt.Sprintf(
 		"%s/%s/%s", g.APIUrl+gdaxProducts, currencyPair, gdaxTicker)
 
-	return ticker, common.SendHTTPGetRequest(path, true, g.Verbose, &ticker)
+	return ticker, g.SendHTTPRequest(path, &ticker)
 }
 
 // GetTrades listd the latest trades for a product
@@ -206,7 +216,7 @@ func (g *GDAX) GetTrades(currencyPair string) ([]Trade, error) {
 	path := fmt.Sprintf(
 		"%s/%s/%s", g.APIUrl+gdaxProducts, currencyPair, gdaxTrades)
 
-	return trades, common.SendHTTPGetRequest(path, true, g.Verbose, &trades)
+	return trades, g.SendHTTPRequest(path, &trades)
 }
 
 // GetHistoricRates returns historic rates for a product. Rates are returned in
@@ -232,19 +242,24 @@ func (g *GDAX) GetHistoricRates(currencyPair string, start, end, granularity int
 		fmt.Sprintf("%s/%s/%s", g.APIUrl+gdaxProducts, currencyPair, gdaxHistory),
 		values)
 
-	if err := common.SendHTTPGetRequest(path, true, g.Verbose, &resp); err != nil {
+	if err := g.SendHTTPRequest(path, &resp); err != nil {
 		return history, err
 	}
 
 	for _, single := range resp {
-		s := History{
-			Time:   int64(single[0].(float64)),
-			Low:    single[1].(float64),
-			High:   single[2].(float64),
-			Open:   single[3].(float64),
-			Close:  single[4].(float64),
-			Volume: single[5].(float64),
-		}
+		var s History
+		a, _ := single[0].(float64)
+		s.Time = int64(a)
+		b, _ := single[1].(float64)
+		s.Low = b
+		c, _ := single[2].(float64)
+		s.High = c
+		d, _ := single[3].(float64)
+		s.Open = d
+		e, _ := single[4].(float64)
+		s.Close = e
+		f, _ := single[5].(float64)
+		s.Volume = f
 		history = append(history, s)
 	}
 
@@ -258,7 +273,7 @@ func (g *GDAX) GetStats(currencyPair string) (Stats, error) {
 	path := fmt.Sprintf(
 		"%s/%s/%s", g.APIUrl+gdaxProducts, currencyPair, gdaxStats)
 
-	return stats, common.SendHTTPGetRequest(path, true, g.Verbose, &stats)
+	return stats, g.SendHTTPRequest(path, &stats)
 }
 
 // GetCurrencies returns a list of supported currency on the exchange
@@ -266,16 +281,14 @@ func (g *GDAX) GetStats(currencyPair string) (Stats, error) {
 func (g *GDAX) GetCurrencies() ([]Currency, error) {
 	currencies := []Currency{}
 
-	return currencies,
-		common.SendHTTPGetRequest(g.APIUrl+gdaxCurrencies, true, g.Verbose, &currencies)
+	return currencies, g.SendHTTPRequest(g.APIUrl+gdaxCurrencies, &currencies)
 }
 
 // GetServerTime returns the API server time
 func (g *GDAX) GetServerTime() (ServerTime, error) {
 	serverTime := ServerTime{}
 
-	return serverTime,
-		common.SendHTTPGetRequest(g.APIUrl+gdaxTime, true, g.Verbose, &serverTime)
+	return serverTime, g.SendHTTPRequest(g.APIUrl+gdaxTime, &serverTime)
 }
 
 // GetAccounts returns a list of trading accounts associated with the APIKEYS
@@ -756,6 +769,11 @@ func (g *GDAX) GetTrailingVolume() ([]Volume, error) {
 		g.SendAuthenticatedHTTPRequest("GET", gdaxTrailingVolume, nil, &resp)
 }
 
+// SendHTTPRequest sends an unauthenticated HTTP request
+func (g *GDAX) SendHTTPRequest(path string, result interface{}) error {
+	return g.SendPayload("GET", path, nil, nil, result, false, g.Verbose)
+}
+
 // SendAuthenticatedHTTPRequest sends an authenticated HTTP reque
 func (g *GDAX) SendAuthenticatedHTTPRequest(method, path string, params map[string]interface{}, result interface{}) (err error) {
 	if !g.AuthenticatedAPISupport {
@@ -785,24 +803,5 @@ func (g *GDAX) SendAuthenticatedHTTPRequest(method, path string, params map[stri
 	headers["CB-ACCESS-PASSPHRASE"] = g.ClientID
 	headers["Content-Type"] = "application/json"
 
-	resp, err := common.SendHTTPRequest(method, g.APIUrl+path, headers, bytes.NewBuffer(payload))
-	if err != nil {
-		return err
-	}
-
-	if g.Verbose {
-		log.Printf("Received raw: \n%s\n", resp)
-	}
-
-	type initialResponse struct {
-		Message string `json:"message"`
-	}
-	initialCheck := initialResponse{}
-
-	err = common.JSONDecode([]byte(resp), &initialCheck)
-	if err == nil && len(initialCheck.Message) != 0 {
-		return errors.New(initialCheck.Message)
-	}
-
-	return common.JSONDecode([]byte(resp), &result)
+	return g.SendPayload(method, g.APIUrl+path, headers, bytes.NewBuffer(payload), result, true, g.Verbose)
 }

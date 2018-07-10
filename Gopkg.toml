@@ -35,8 +35,12 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/thrasher-/socketio"
+  name = "github.com/extrame/socketio"
 
 [[constraint]]
   branch = "master"
   name = "github.com/toorop/go-pusher"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/crypto"

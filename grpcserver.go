@@ -12,7 +12,13 @@ import (
 	ig "github.com/extrame/gocryptotrader/grpc"
 )
 
+type utServer struct {
+	server   ig.GoCryptoTraderService_UpdateTickerServer
+	cancelCh chan bool
+}
+
 type Server struct {
+	utServers []utServer
 }
 
 func (s *Server) GetTickers(context.Context, *empty.Empty) (*ig.AllEnabledExchangeCurrencies, error) {
@@ -24,17 +30,32 @@ func (s *Server) GetTicker(c context.Context, req *ig.SpecificTicker) (*ticker.P
 	return GetSpecificTicker(req.Currency, req.ExchangeName, req.AssetType)
 }
 
+func (s *Server) UpdateTicker(empty *empty.Empty, server ig.GoCryptoTraderService_UpdateTickerServer) error {
+	var c = make(chan bool)
+	s.utServers = append(s.utServers, utServer{
+		server:   server,
+		cancelCh: c,
+	})
+	select {
+	case <-c:
+		return nil
+	}
+	return nil
+}
+
 //StartGrpcServer start the grpc server
-func StartGrpcServer(addr string) error {
-	var err error
+func StartGrpcServer(addr string) (server *Server, err error) {
 	var lis net.Listener
 	if lis, err = net.Listen("tcp", addr); err == nil {
 		s := grpc.NewServer()
-		ig.RegisterGoCryptoTraderServiceServer(s, &Server{})
-		err = s.Serve(lis)
+		server = new(Server)
+		ig.RegisterGoCryptoTraderServiceServer(s, server)
+		go func() {
+			err := s.Serve(lis)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}()
 	}
-	if err != nil {
-		log.Fatal(err)
-	}
-	return err
+	return
 }

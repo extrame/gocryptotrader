@@ -3,6 +3,7 @@ package huobi
 import (
 	"errors"
 	"log"
+	"sync"
 
 	"github.com/extrame/gocryptotrader/common"
 	"github.com/extrame/gocryptotrader/config"
@@ -13,8 +14,12 @@ import (
 )
 
 // Start starts the HUOBI go routine
-func (h *HUOBI) Start() {
-	go h.Run()
+func (h *HUOBI) Start(wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		h.Run()
+		wg.Done()
+	}()
 }
 
 // Run implements the HUOBI wrapper
@@ -65,12 +70,12 @@ func (h *HUOBI) Run() {
 			enabledPairs := []string{"btc-usdt"}
 			log.Println("WARNING: Available and enabled pairs for Huobi reset due to config upgrade, please enable the ones you would like again")
 
-			err = h.UpdateEnabledCurrencies(enabledPairs, true)
+			err = h.UpdateCurrencies(enabledPairs, true, true)
 			if err != nil {
 				log.Printf("%s Failed to update enabled currencies.\n", h.GetName())
 			}
 		}
-		err = h.UpdateAvailableCurrencies(currencies, forceUpgrade)
+		err = h.UpdateCurrencies(currencies, false, forceUpgrade)
 		if err != nil {
 			log.Printf("%s Failed to update available currencies.\n", h.GetName())
 		}
@@ -149,4 +154,40 @@ func (h *HUOBI) GetExchangeHistory(p pair.CurrencyPair, assetType string) ([]exc
 	var resp []exchange.TradeHistory
 
 	return resp, errors.New("trade history not yet implemented")
+}
+
+// SubmitExchangeOrder submits a new order
+func (h *HUOBI) SubmitExchangeOrder(p pair.CurrencyPair, side string, orderType int, amount, price float64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// ModifyExchangeOrder will allow of changing orderbook placement and limit to
+// market conversion
+func (h *HUOBI) ModifyExchangeOrder(p pair.CurrencyPair, orderID, action int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelExchangeOrder cancels an order by its corresponding ID number
+func (h *HUOBI) CancelExchangeOrder(p pair.CurrencyPair, orderID int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelAllExchangeOrders cancels all orders associated with a currency pair
+func (h *HUOBI) CancelAllExchangeOrders(p pair.CurrencyPair) error {
+	return errors.New("not yet implemented")
+}
+
+// GetExchangeOrderInfo returns information on a current open order
+func (h *HUOBI) GetExchangeOrderInfo(orderID int64) (float64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// GetExchangeDepositAddress returns a deposit address for a specified currency
+func (h *HUOBI) GetExchangeDepositAddress(p pair.CurrencyPair) (string, error) {
+	return "", errors.New("not yet implemented")
+}
+
+// WithdrawExchangeFunds returns a withdrawal ID when a withdrawal is submitted
+func (h *HUOBI) WithdrawExchangeFunds(address string, p pair.CurrencyPair, amount float64) (string, error) {
+	return "", errors.New("not yet implemented")
 }

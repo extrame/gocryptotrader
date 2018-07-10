@@ -12,6 +12,7 @@ import (
 	"github.com/extrame/gocryptotrader/common"
 	"github.com/extrame/gocryptotrader/config"
 	exchange "github.com/extrame/gocryptotrader/exchanges"
+	"github.com/extrame/gocryptotrader/exchanges/request"
 	"github.com/extrame/gocryptotrader/exchanges/ticker"
 )
 
@@ -37,12 +38,17 @@ const (
 	priceChange      = "/api/v1/ticker/24hr"
 	symbolPrice      = "/api/v3/ticker/price"
 	bestPrice        = "/api/v3/ticker/bookTicker"
+	accountInfo      = "/api/v3/account"
 
 	// Authenticated endpoints
-
 	newOrderTest = "/api/v3/order/test"
 	newOrder     = "/api/v3/order"
 	queryOrder   = "/api/v3/order"
+
+	// binance authenticated and unauthenticated limit rates
+	// to-do
+	binanceAuthRate   = 0
+	binanceUnauthRate = 0
 )
 
 // SetDefaults sets the basic defaults for Binance
@@ -57,7 +63,10 @@ func (b *Binance) SetDefaults() {
 	b.ConfigCurrencyPairFormat.Delimiter = "-"
 	b.ConfigCurrencyPairFormat.Uppercase = true
 	b.AssetTypes = []string{ticker.Spot}
+	b.SupportsAutoPairUpdating = true
+	b.SupportsRESTTickerBatching = true
 	b.SetValues()
+	b.Requester = request.New(b.Name, request.NewRateLimit(time.Second, binanceAuthRate), request.NewRateLimit(time.Second, binanceUnauthRate), common.NewHTTPClientWithTimeout(exchange.DefaultHTTPTimeout))
 }
 
 // Setup takes in the supplied exchange configuration details and sets params
@@ -68,6 +77,7 @@ func (b *Binance) Setup(exch config.ExchangeConfig) {
 		b.Enabled = true
 		b.AuthenticatedAPISupport = exch.AuthenticatedAPISupport
 		b.SetAPIKeys(exch.APIKey, exch.APISecret, "", false)
+		b.SetHTTPClientTimeout(exch.HTTPTimeout)
 		b.RESTPollingDelay = exch.RESTPollingDelay
 		b.Verbose = exch.Verbose
 		b.Websocket = exch.Websocket
@@ -79,6 +89,10 @@ func (b *Binance) Setup(exch config.ExchangeConfig) {
 			log.Fatal(err)
 		}
 		err = b.SetAssetTypes()
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = b.SetAutoPairDefaults()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -109,7 +123,7 @@ func (b *Binance) GetExchangeInfo() (ExchangeInfo, error) {
 	var resp ExchangeInfo
 	path := apiURL + exchangeInfo
 
-	return resp, common.SendHTTPGetRequest(path, true, b.Verbose, &resp)
+	return resp, b.SendHTTPRequest(path, &resp)
 }
 
 // GetOrderBook returns full orderbook information
@@ -132,7 +146,7 @@ func (b *Binance) GetOrderBook(symbol string, limit int64) (OrderBook, error) {
 
 	path := fmt.Sprintf("%s%s?%s", apiURL, orderBookDepth, params.Encode())
 
-	if err := common.SendHTTPGetRequest(path, true, b.Verbose, &resp); err != nil {
+	if err := b.SendHTTPRequest(path, &resp); err != nil {
 		return orderbook, err
 	}
 
@@ -147,8 +161,9 @@ func (b *Binance) GetOrderBook(symbol string, limit int64) (OrderBook, error) {
 				ASK.Price, _ = strconv.ParseFloat(ask.(string), 64)
 			case 1:
 				ASK.Quantity, _ = strconv.ParseFloat(ask.(string), 64)
+				orderbook.Asks = append(orderbook.Asks, ASK)
+				break
 			}
-			orderbook.Asks = append(orderbook.Asks, ASK)
 		}
 	}
 
@@ -163,8 +178,9 @@ func (b *Binance) GetOrderBook(symbol string, limit int64) (OrderBook, error) {
 				BID.Price, _ = strconv.ParseFloat(bid.(string), 64)
 			case 1:
 				BID.Quantity, _ = strconv.ParseFloat(bid.(string), 64)
+				orderbook.Bids = append(orderbook.Bids, BID)
+				break
 			}
-			orderbook.Bids = append(orderbook.Bids, BID)
 		}
 	}
 	return orderbook, nil
@@ -190,7 +206,7 @@ func (b *Binance) GetRecentTrades(symbol string, limit int64) ([]RecentTrade, er
 
 	path := fmt.Sprintf("%s%s?%s", apiURL, recentTrades, params.Encode())
 
-	return resp, common.SendHTTPGetRequest(path, true, b.Verbose, &resp)
+	return resp, b.SendHTTPRequest(path, &resp)
 }
 
 // GetHistoricalTrades returns historical trade activity
@@ -215,7 +231,7 @@ func (b *Binance) GetHistoricalTrades(symbol string, limit, fromID int64) ([]His
 
 	path := fmt.Sprintf("%s%s?%s", apiURL, historicalTrades, params.Encode())
 
-	return resp, common.SendHTTPGetRequest(path, true, b.Verbose, &resp)
+	return resp, b.SendHTTPRequest(path, &resp)
 }
 
 // GetAggregatedTrades returns aggregated trade activity
@@ -238,7 +254,7 @@ func (b *Binance) GetAggregatedTrades(symbol string, limit int64) ([]AggregatedT
 
 	path := fmt.Sprintf("%s%s?%s", apiURL, aggregatedTrades, params.Encode())
 
-	return resp, common.SendHTTPGetRequest(path, true, b.Verbose, &resp)
+	return resp, b.SendHTTPRequest(path, &resp)
 }
 
 // GetCandleStickData returns candle stick data
@@ -267,7 +283,7 @@ func (b *Binance) GetCandleStickData(symbol, interval string, limit int64) ([]Ca
 
 	path := fmt.Sprintf("%s%s?%s", apiURL, candleStick, params.Encode())
 
-	if err := common.SendHTTPGetRequest(path, true, b.Verbose, &resp); err != nil {
+	if err := b.SendHTTPRequest(path, &resp); err != nil {
 		return kline, err
 	}
 
@@ -319,14 +335,14 @@ func (b *Binance) GetPriceChangeStats(symbol string) (PriceChangeStats, error) {
 
 	path := fmt.Sprintf("%s%s?%s", apiURL, priceChange, params.Encode())
 
-	return resp, common.SendHTTPGetRequest(path, true, b.Verbose, &resp)
+	return resp, b.SendHTTPRequest(path, &resp)
 }
 
 // GetTickers returns the ticker data for the last 24 hrs
 func (b *Binance) GetTickers() ([]PriceChangeStats, error) {
 	var resp []PriceChangeStats
 	path := fmt.Sprintf("%s%s", apiURL, priceChange)
-	return resp, common.SendHTTPGetRequest(path, true, b.Verbose, &resp)
+	return resp, b.SendHTTPRequest(path, &resp)
 }
 
 // GetLatestSpotPrice returns latest spot price of symbol
@@ -344,7 +360,7 @@ func (b *Binance) GetLatestSpotPrice(symbol string) (SymbolPrice, error) {
 
 	path := fmt.Sprintf("%s%s?%s", apiURL, symbolPrice, params.Encode())
 
-	return resp, common.SendHTTPGetRequest(path, true, b.Verbose, &resp)
+	return resp, b.SendHTTPRequest(path, &resp)
 }
 
 // GetBestPrice returns the latest best price for symbol
@@ -362,7 +378,7 @@ func (b *Binance) GetBestPrice(symbol string) (BestPrice, error) {
 
 	path := fmt.Sprintf("%s%s?%s", apiURL, bestPrice, params.Encode())
 
-	return resp, common.SendHTTPGetRequest(path, true, b.Verbose, &resp)
+	return resp, b.SendHTTPRequest(path, &resp)
 }
 
 // NewOrderTest sends a new order
@@ -429,7 +445,35 @@ func (b *Binance) QueryOrder(symbol, origClientOrderID string, orderID int64) (Q
 	return resp, nil
 }
 
-// SendAuthHTTPRequest something
+// GetAccount returns binance user accounts
+func (b *Binance) GetAccount() (*Account, error) {
+	type respone struct {
+		Response
+		Account
+	}
+
+	var resp respone
+
+	path := fmt.Sprintf("%s%s", apiURL, accountInfo)
+	params := url.Values{}
+
+	if err := b.SendAuthHTTPRequest("GET", path, params, &resp); err != nil {
+		return &resp.Account, err
+	}
+
+	if resp.Code != 0 {
+		return &resp.Account, errors.New(resp.Msg)
+	}
+
+	return &resp.Account, nil
+}
+
+// SendHTTPRequest sends an unauthenticated request
+func (b *Binance) SendHTTPRequest(path string, result interface{}) error {
+	return b.SendPayload("GET", path, nil, nil, result, false, b.Verbose)
+}
+
+// SendAuthHTTPRequest sends an authenticated HTTP request
 func (b *Binance) SendAuthHTTPRequest(method, path string, params url.Values, result interface{}) error {
 	if !b.AuthenticatedAPISupport {
 		return fmt.Errorf(exchange.WarningAuthenticatedRequestWithoutCredentialsSet, b.Name)
@@ -453,20 +497,9 @@ func (b *Binance) SendAuthHTTPRequest(method, path string, params url.Values, re
 	if b.Verbose {
 		log.Printf("sent path: \n%s\n", path)
 	}
+	path = common.EncodeURLValues(path, params)
 
-	resp, err := common.SendHTTPRequest(method, path, headers, bytes.NewBufferString(params.Encode()))
-	if err != nil {
-		return err
-	}
-
-	if b.Verbose {
-		log.Printf("Received raw: \n%s\n", resp)
-	}
-
-	if err = common.JSONDecode([]byte(resp), &result); err != nil {
-		return errors.New("sendAuthenticatedHTTPRequest: Unable to JSON Unmarshal response." + err.Error())
-	}
-	return nil
+	return b.SendPayload(method, path, headers, bytes.NewBufferString(""), result, true, b.Verbose)
 }
 
 // CheckLimit checks value against a variable list

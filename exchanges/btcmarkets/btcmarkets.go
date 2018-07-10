@@ -11,6 +11,7 @@ import (
 	"github.com/extrame/gocryptotrader/common"
 	"github.com/extrame/gocryptotrader/config"
 	"github.com/extrame/gocryptotrader/exchanges"
+	"github.com/extrame/gocryptotrader/exchanges/request"
 	"github.com/extrame/gocryptotrader/exchanges/ticker"
 )
 
@@ -27,7 +28,7 @@ const (
 	btcMarketsWithdrawCrypto    = "/fundtransfer/withdrawCrypto"
 	btcMarketsWithdrawAud       = "/fundtransfer/withdrawEFT"
 
-	//Status Values
+	// Status Values
 	orderStatusNew                = "New"
 	orderStatusPlaced             = "Placed"
 	orderStatusFailed             = "Failed"
@@ -36,6 +37,9 @@ const (
 	orderStatusPartiallyCancelled = "Partially Cancelled"
 	orderStatusFullyMatched       = "Fully Matched"
 	orderStatusPartiallyMatched   = "Partially Matched"
+
+	btcmarketsAuthLimit   = 10
+	btcmarketsUnauthLimit = 25
 )
 
 // BTCMarkets is the overarching type across the BTCMarkets package
@@ -58,6 +62,9 @@ func (b *BTCMarkets) SetDefaults() {
 	b.ConfigCurrencyPairFormat.Delimiter = ""
 	b.ConfigCurrencyPairFormat.Uppercase = true
 	b.AssetTypes = []string{ticker.Spot}
+	b.SupportsAutoPairUpdating = true
+	b.SupportsRESTTickerBatching = false
+	b.Requester = request.New(b.Name, request.NewRateLimit(time.Second*10, btcmarketsAuthLimit), request.NewRateLimit(time.Second*10, btcmarketsUnauthLimit), common.NewHTTPClientWithTimeout(exchange.DefaultHTTPTimeout))
 }
 
 // Setup takes in an exchange configuration and sets all parameters
@@ -68,6 +75,7 @@ func (b *BTCMarkets) Setup(exch config.ExchangeConfig) {
 		b.Enabled = true
 		b.AuthenticatedAPISupport = exch.AuthenticatedAPISupport
 		b.SetAPIKeys(exch.APIKey, exch.APISecret, "", true)
+		b.SetHTTPClientTimeout(exch.HTTPTimeout)
 		b.RESTPollingDelay = exch.RESTPollingDelay
 		b.Verbose = exch.Verbose
 		b.Websocket = exch.Websocket
@@ -79,6 +87,10 @@ func (b *BTCMarkets) Setup(exch config.ExchangeConfig) {
 			log.Fatal(err)
 		}
 		err = b.SetAssetTypes()
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = b.SetAutoPairDefaults()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -94,22 +106,24 @@ func (b *BTCMarkets) GetFee() float64 {
 // symbol - example "btc" or "ltc"
 func (b *BTCMarkets) GetTicker(firstPair, secondPair string) (Ticker, error) {
 	ticker := Ticker{}
-	path := fmt.Sprintf("/market/%s/%s/tick", common.StringToUpper(firstPair),
+	path := fmt.Sprintf("%s/market/%s/%s/tick",
+		btcMarketsAPIURL,
+		common.StringToUpper(firstPair),
 		common.StringToUpper(secondPair))
 
-	return ticker,
-		common.SendHTTPGetRequest(btcMarketsAPIURL+path, true, b.Verbose, &ticker)
+	return ticker, b.SendHTTPRequest(path, &ticker)
 }
 
 // GetOrderbook returns current orderbook
 // symbol - example "btc" or "ltc"
 func (b *BTCMarkets) GetOrderbook(firstPair, secondPair string) (Orderbook, error) {
 	orderbook := Orderbook{}
-	path := fmt.Sprintf("/market/%s/%s/orderbook", common.StringToUpper(firstPair),
+	path := fmt.Sprintf("%s/market/%s/%s/orderbook",
+		btcMarketsAPIURL,
+		common.StringToUpper(firstPair),
 		common.StringToUpper(secondPair))
 
-	return orderbook,
-		common.SendHTTPGetRequest(btcMarketsAPIURL+path, true, b.Verbose, &orderbook)
+	return orderbook, b.SendHTTPRequest(path, &orderbook)
 }
 
 // GetTrades returns executed trades on the exchange
@@ -121,7 +135,7 @@ func (b *BTCMarkets) GetTrades(firstPair, secondPair string, values url.Values) 
 		btcMarketsAPIURL, common.StringToUpper(firstPair),
 		common.StringToUpper(secondPair)), values)
 
-	return trades, common.SendHTTPGetRequest(path, true, b.Verbose, &trades)
+	return trades, b.SendHTTPRequest(path, &trades)
 }
 
 // NewOrder requests a new order and returns an ID
@@ -132,12 +146,15 @@ func (b *BTCMarkets) GetTrades(firstPair, secondPair string, values url.Values) 
 // orderside - example "Bid" or "Ask"
 // orderType - example "limit"
 // clientReq - example "abc-cdf-1000"
-func (b *BTCMarkets) NewOrder(currency, instrument string, price, amount int64, orderSide, orderType, clientReq string) (int, error) {
+func (b *BTCMarkets) NewOrder(currency, instrument string, price, amount float64, orderSide, orderType, clientReq string) (int, error) {
+	newPrice := int64(price * float64(common.SatoshisPerBTC))
+	newVolume := int64(amount * float64(common.SatoshisPerBTC))
+
 	order := OrderToGo{
 		Currency:        common.StringToUpper(currency),
 		Instrument:      common.StringToUpper(instrument),
-		Price:           price * common.SatoshisPerBTC,
-		Volume:          amount * common.SatoshisPerBTC,
+		Price:           newPrice,
+		Volume:          newVolume,
 		OrderSide:       orderSide,
 		OrderType:       orderType,
 		ClientRequestID: clientReq,
@@ -287,9 +304,11 @@ func (b *BTCMarkets) GetAccountBalance() ([]AccountBalance, error) {
 }
 
 // WithdrawCrypto withdraws cryptocurrency into a designated address
-func (b *BTCMarkets) WithdrawCrypto(amount int64, currency, address string) (string, error) {
+func (b *BTCMarkets) WithdrawCrypto(amount float64, currency, address string) (string, error) {
+	newAmount := int64(amount * float64(common.SatoshisPerBTC))
+
 	req := WithdrawRequestCrypto{
-		Amount:   amount,
+		Amount:   newAmount,
 		Currency: common.StringToUpper(currency),
 		Address:  address,
 	}
@@ -309,14 +328,16 @@ func (b *BTCMarkets) WithdrawCrypto(amount int64, currency, address string) (str
 
 // WithdrawAUD withdraws AUD into a designated bank address
 // Does not return a TxID!
-func (b *BTCMarkets) WithdrawAUD(accountName, accountNumber, bankName, bsbNumber, currency string, amount int64) (string, error) {
+func (b *BTCMarkets) WithdrawAUD(accountName, accountNumber, bankName, bsbNumber string, amount float64) (string, error) {
+	newAmount := int64(amount * float64(common.SatoshisPerBTC))
+
 	req := WithdrawRequestAUD{
 		AccountName:   accountName,
 		AccountNumber: accountNumber,
 		BankName:      bankName,
 		BSBNumber:     bsbNumber,
-		Amount:        amount,
-		Currency:      common.StringToUpper(currency),
+		Amount:        newAmount,
+		Currency:      "AUD",
 	}
 
 	resp := Response{}
@@ -330,6 +351,11 @@ func (b *BTCMarkets) WithdrawAUD(accountName, accountNumber, bankName, bsbNumber
 	}
 
 	return resp.Status, nil
+}
+
+// SendHTTPRequest sends an unauthenticated HTTP request
+func (b *BTCMarkets) SendHTTPRequest(path string, result interface{}) error {
+	return b.SendPayload("GET", path, nil, nil, result, false, b.Verbose)
 }
 
 // SendAuthenticatedRequest sends an authenticated HTTP request
@@ -370,21 +396,5 @@ func (b *BTCMarkets) SendAuthenticatedRequest(reqType, path string, data interfa
 	headers["timestamp"] = b.Nonce.String()[0:13]
 	headers["signature"] = common.Base64Encode(hmac)
 
-	resp, err := common.SendHTTPRequest(reqType, btcMarketsAPIURL+path, headers, bytes.NewBuffer(payload))
-
-	if err != nil {
-		return err
-	}
-
-	if b.Verbose {
-		log.Printf("Received raw: %s\n", resp)
-	}
-
-	err = common.JSONDecode([]byte(resp), &result)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return b.SendPayload(reqType, btcMarketsAPIURL+path, headers, bytes.NewBuffer(payload), result, true, b.Verbose)
 }

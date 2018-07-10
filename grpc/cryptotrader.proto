@@ -8,8 +8,14 @@ package grpc;
 service GoCryptoTraderService {
     rpc GetTickers(google.protobuf.Empty) returns (AllEnabledExchangeCurrencies){}
     rpc GetTicker(SpecificTicker) returns(ticker.Price){}
+    rpc UpdateTicker(google.protobuf.Empty) returns(stream UpdateTickerReport){}
  }
 
+ message UpdateTickerReport {
+    ticker.Price Price = 1;
+    string ExchangeName =2;
+    string AssetType =3;
+ }
 
  message EnabledExchangeCurrencies {
     string ExchangeName = 1;

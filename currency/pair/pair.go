@@ -2,6 +2,8 @@ package pair
 
 import (
 	"strings"
+
+	"github.com/extrame/gocryptotrader/common"
 )
 
 // // CurrencyItem is an exported string with methods to manipulate the data instead
@@ -57,14 +59,29 @@ func (c *CurrencyPair) Display(delimiter string, uppercase bool) (pair string) {
 }
 
 // Equal compares two currency pairs and returns whether or not they are equal
-func (c *CurrencyPair) Equal(p CurrencyPair) bool {
-	if UpperCurrencyItem(c.FirstCurrency) == UpperCurrencyItem(p.FirstCurrency) &&
-		UpperCurrencyItem(c.SecondCurrency) == UpperCurrencyItem(p.SecondCurrency) ||
-		UpperCurrencyItem(c.FirstCurrency) == UpperCurrencyItem(p.SecondCurrency) &&
-			UpperCurrencyItem(c.SecondCurrency) == UpperCurrencyItem(p.FirstCurrency) {
-		return true
+func (c *CurrencyPair) Equal(p CurrencyPair, exact bool) bool {
+	if !exact {
+		if UpperCurrencyItem(c.FirstCurrency) == UpperCurrencyItem(p.FirstCurrency) &&
+			UpperCurrencyItem(c.SecondCurrency) == UpperCurrencyItem(p.SecondCurrency) ||
+			UpperCurrencyItem(c.FirstCurrency) == UpperCurrencyItem(p.SecondCurrency) &&
+				UpperCurrencyItem(c.SecondCurrency) == UpperCurrencyItem(p.FirstCurrency) {
+			return true
+		}
+	} else {
+		if UpperCurrencyItem(c.FirstCurrency) == UpperCurrencyItem(p.FirstCurrency) &&
+			UpperCurrencyItem(c.SecondCurrency) == UpperCurrencyItem(p.SecondCurrency) {
+			return true
+		}
 	}
 	return false
+}
+
+// Swap swaps the pairs first and second currencies
+func (c CurrencyPair) Swap() CurrencyPair {
+	p := c
+	p.FirstCurrency = c.SecondCurrency
+	p.SecondCurrency = c.FirstCurrency
+	return p
 }
 
 // NewCurrencyPairDelimiter splits the desired currency string at delimeter,
@@ -112,13 +129,32 @@ func NewCurrencyPairFromString(currency string) CurrencyPair {
 
 // Contains checks to see if a specified pair exists inside a currency pair
 // array
-func Contains(pairs []CurrencyPair, p CurrencyPair) bool {
+func Contains(pairs []CurrencyPair, p CurrencyPair, exact bool) bool {
 	for x := range pairs {
-		if pairs[x].Equal(p) {
+		if pairs[x].Equal(p, exact) {
 			return true
 		}
 	}
 	return false
+}
+
+// ContainsCurrency checks to see if a pair contains a specific currency
+func ContainsCurrency(p CurrencyPair, c string) bool {
+	return common.StringToUpper(p.FirstCurrency) == common.StringToUpper(c) ||
+		common.StringToUpper(p.SecondCurrency) == common.StringToUpper(c)
+}
+
+// RemovePairsByFilter checks to see if a pair contains a specific currency
+// and removes it from the list of pairs
+func RemovePairsByFilter(p []CurrencyPair, filter string) []CurrencyPair {
+	var pairs []CurrencyPair
+	for x := range p {
+		if ContainsCurrency(p[x], filter) {
+			continue
+		}
+		pairs = append(pairs, p[x])
+	}
+	return pairs
 }
 
 // FormatPairs formats a string array to a list of currency pairs with the
@@ -145,11 +181,33 @@ func FormatPairs(pairs []string, delimiter, index string) []CurrencyPair {
 }
 
 // CopyPairFormat copies the pair format from a list of pairs once matched
-func CopyPairFormat(p CurrencyPair, pairs []CurrencyPair) CurrencyPair {
+func CopyPairFormat(p CurrencyPair, pairs []CurrencyPair, exact bool) CurrencyPair {
 	for x := range pairs {
-		if p.Equal(pairs[x]) {
+		if p.Equal(pairs[x], exact) {
 			return pairs[x]
 		}
 	}
 	return CurrencyPair{}
+}
+
+// FindPairDifferences returns pairs which are new or have been removed
+func FindPairDifferences(oldPairs, newPairs []string) ([]string, []string) {
+	var newPs, removedPs []string
+	for x := range newPairs {
+		if newPairs[x] == "" {
+			continue
+		}
+		if !common.StringDataCompareUpper(oldPairs, newPairs[x]) {
+			newPs = append(newPs, newPairs[x])
+		}
+	}
+	for x := range oldPairs {
+		if oldPairs[x] == "" {
+			continue
+		}
+		if !common.StringDataCompareUpper(newPairs, oldPairs[x]) {
+			removedPs = append(removedPs, oldPairs[x])
+		}
+	}
+	return newPs, removedPs
 }

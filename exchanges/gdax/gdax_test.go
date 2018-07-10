@@ -2,6 +2,7 @@ package gdax
 
 import (
 	"testing"
+	"time"
 
 	"github.com/extrame/gocryptotrader/config"
 )
@@ -17,12 +18,13 @@ const (
 
 func TestSetDefaults(t *testing.T) {
 	g.SetDefaults()
+	g.Requester.SetRateLimit(false, time.Second, 1)
 }
 
 func TestSetup(t *testing.T) {
 	cfg := config.GetConfig()
 	cfg.LoadConfig("../../testdata/configtest.json")
-	gdxConfig, err := cfg.GetExchangeConfig("Bitfinex")
+	gdxConfig, err := cfg.GetExchangeConfig("GDAX")
 	if err != nil {
 		t.Error("Test Failed - GDAX Setup() init error")
 	}

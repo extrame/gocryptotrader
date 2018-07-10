@@ -13,18 +13,22 @@ var translations = map[string]string{
 
 // GetTranslation returns similar strings for a particular currency
 func GetTranslation(currency string) (string, error) {
-	result, ok := translations[currency]
-	if !ok {
-		return "", errors.New("no translation found for specified currency")
-	}
+	for k, v := range translations {
+		if k == currency {
+			return v, nil
+		}
 
-	return result, nil
+		if v == currency {
+			return k, nil
+		}
+	}
+	return "", errors.New("no translation found for specified currency")
 }
 
 // HasTranslation returns whether or not a particular currency has a translation
 func HasTranslation(currency string) bool {
-	_, ok := translations[currency]
-	if !ok {
+	_, err := GetTranslation(currency)
+	if err != nil {
 		return false
 	}
 	return true

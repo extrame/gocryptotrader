@@ -3,6 +3,7 @@ package btcc
 import (
 	"errors"
 	"log"
+	"sync"
 
 	"github.com/extrame/gocryptotrader/common"
 	"github.com/extrame/gocryptotrader/config"
@@ -13,8 +14,12 @@ import (
 )
 
 // Start starts the BTCC go routine
-func (b *BTCC) Start() {
-	go b.Run()
+func (b *BTCC) Start(wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		b.Run()
+		wg.Done()
+	}()
 }
 
 // Run implements the BTCC wrapper
@@ -44,12 +49,12 @@ func (b *BTCC) Run() {
 		exchCfg.EnabledPairs = pairs[0]
 		b.BaseCurrencies = []string{"USD"}
 
-		err = b.UpdateAvailableCurrencies(pairs, true)
+		err = b.UpdateCurrencies(pairs, false, true)
 		if err != nil {
 			log.Printf("%s failed to update available currencies. %s\n", b.Name, err)
 		}
 
-		err = b.UpdateEnabledCurrencies(pairs, true)
+		err = b.UpdateCurrencies(pairs, true, true)
 		if err != nil {
 			log.Printf("%s failed to update enabled currencies. %s\n", b.Name, err)
 		}
@@ -133,4 +138,40 @@ func (b *BTCC) GetExchangeHistory(p pair.CurrencyPair, assetType string) ([]exch
 	var resp []exchange.TradeHistory
 
 	return resp, errors.New("trade history not yet implemented")
+}
+
+// SubmitExchangeOrder submits a new order
+func (b *BTCC) SubmitExchangeOrder(p pair.CurrencyPair, side string, orderType int, amount, price float64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// ModifyExchangeOrder will allow of changing orderbook placement and limit to
+// market conversion
+func (b *BTCC) ModifyExchangeOrder(p pair.CurrencyPair, orderID, action int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelExchangeOrder cancels an order by its corresponding ID number
+func (b *BTCC) CancelExchangeOrder(p pair.CurrencyPair, orderID int64) (int64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// CancelAllExchangeOrders cancels all orders associated with a currency pair
+func (b *BTCC) CancelAllExchangeOrders(p pair.CurrencyPair) error {
+	return errors.New("not yet implemented")
+}
+
+// GetExchangeOrderInfo returns information on a current open order
+func (b *BTCC) GetExchangeOrderInfo(orderID int64) (float64, error) {
+	return 0, errors.New("not yet implemented")
+}
+
+// GetExchangeDepositAddress returns a deposit address for a specified currency
+func (b *BTCC) GetExchangeDepositAddress(p pair.CurrencyPair) (string, error) {
+	return "", errors.New("not yet implemented")
+}
+
+// WithdrawExchangeFunds returns a withdrawal ID when a withdrawal is submitted
+func (b *BTCC) WithdrawExchangeFunds(address string, p pair.CurrencyPair, amount float64) (string, error) {
+	return "", errors.New("not yet implemented")
 }
